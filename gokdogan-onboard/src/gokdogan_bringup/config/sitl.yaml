@@ -15,6 +15,29 @@ aircraft_state:
   ros__parameters:
     publish_rate_hz: 20.0
 
+target_selector:
+  ros__parameters:
+    rate_hz: 2.0
+    w_mesafe: 0.40
+    w_aci: 0.30
+    w_gecmis: 0.20
+    w_risk: 0.10
+    d_ref_m: 1000.0
+
+guidance:
+  ros__parameters:
+    kp: 0.042
+    ki: 0.0008
+    kd: 0.025
+    phi_max_deg: 45.0
+    theta_max_deg: 30.0
+    phi_rate_deg_s: 20.0
+    lpf_alpha: 0.3
+    enter_d_m: 480.0
+    exit_d_m: 520.0
+    bbox_stale_s: 0.5
+    control_rate_hz: 20.0
+
 mission_link:
   ros__parameters:
     udp_port: 5005

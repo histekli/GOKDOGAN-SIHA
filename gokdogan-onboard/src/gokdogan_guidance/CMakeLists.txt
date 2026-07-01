@@ -12,8 +12,11 @@ find_package(ament_cmake_python REQUIRED)
 install(DIRECTORY include/ DESTINATION include)
 ament_export_include_directories(include)
 
-# Python modülü (frames.py + gelecekte güdüm)
+# Python modülü (frames.py + geo + controllers + guidance_node)
 ament_python_install_package(${PROJECT_NAME})
+
+# guidance_node çalıştırılabilir (ros2 run gokdogan_guidance guidance_node)
+install(PROGRAMS scripts/guidance_node DESTINATION lib/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -31,6 +34,9 @@ if(BUILD_TESTING)
 
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_frames_py test/test_frames.py)
+  ament_add_pytest_test(test_geo_py test/test_geo.py)
+  ament_add_pytest_test(test_controllers_py test/test_controllers.py)
+  ament_add_pytest_test(test_precise_closed_loop_py test/test_precise_closed_loop.py)
 endif()
 
 ament_package()

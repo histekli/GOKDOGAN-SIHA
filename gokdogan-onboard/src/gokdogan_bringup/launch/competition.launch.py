@@ -57,6 +57,15 @@ def _setup(context, *args, **kwargs):
             package="gokdogan_mavlink_iface", executable="aircraft_state_node",
             name="aircraft_state", output="screen", parameters=[cfg],
         ))
+    if LaunchConfiguration("enable_guidance").perform(context) == "true":
+        nodes.append(Node(
+            package="gokdogan_target_selector", executable="target_selector_node",
+            name="target_selector", output="screen", parameters=[cfg],
+        ))
+        nodes.append(Node(
+            package="gokdogan_guidance", executable="guidance_node",
+            name="guidance", output="screen", parameters=[cfg],
+        ))
     return nodes
 
 
@@ -68,5 +77,7 @@ def generate_launch_description():
                               description="MAVROS FCU URL (boş → mode'a göre varsayılan)"),
         DeclareLaunchArgument("enable_aircraft_state", default_value="true",
                               description="aircraft_state node'unu başlat"),
+        DeclareLaunchArgument("enable_guidance", default_value="true",
+                              description="target_selector + guidance node'larını başlat"),
         OpaqueFunction(function=_setup),
     ])

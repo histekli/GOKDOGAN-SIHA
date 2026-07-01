@@ -40,6 +40,9 @@ run-mission-link-demo: ## SITL + mission_link + mock_gcs → START_LOCK→LOCKIN
 run-perception-demo: ## perception(synthetic)→tracking→lock_validator → geçerli kilit (Kabul Kapısı 3)
 	$(DRUN) bash scripts/run_perception_demo.sh
 
+run-guidance-demo: ## SITL + target_selector + guidance → rakibe kaba-faz yaklaşım (Kabul Kapısı 4)
+	$(DRUN) bash scripts/run_guidance_demo.sh
+
 mock-gcs: ## mock GCS'i çalıştır (referans yer istasyonu — onboard'a bağlanır)
 	$(DRUN_IT) bash -c "source /opt/ros/humble/setup.bash; source gokdogan-onboard/install/setup.bash; python3 tools/mock_gcs.py $(ARGS)"
 

@@ -122,7 +122,13 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
         (5s/4s/200ms) + last_locked_id; node
   - [x] Testler: 5 kuralın HER biri + zaman penceresi + last_locked_id + tracking + **sentetik pipeline entegrasyon**
   - [x] **Kabul Kapısı 3:** sentetik hedef→tespit→takip→doğru lock_event (pure-Python + ROS grafiği); 92 test yeşil
-- [ ] Faz 4 — Güdüm & hedef seçimi
+- [x] **Faz 4 — Güdüm & hedef seçimi (iki-faz cascade)** — ✅ **KABUL KAPISI 4 GEÇİLDİ**
+  - [x] gokdogan_target_selector: S=0.40·mesafe+0.30·açı+0.20·geçmiş−0.10·risk + lead-angle + node
+  - [x] gokdogan_guidance: geo (WGS84 flat-earth→NED) + controllers (PID anti-windup, PN divide-guard,
+        rate-limit/LPF, faz-FSM histerezis 480/520) + guidance_node (iki-faz cascade, TEK-YAZICI gate)
+  - [x] Testler: geo/selector/controllers + precise kapalı-döngü (kilit <30s) + faz-flapping assert
+  - [x] **Kabul Kapısı 4:** SITL kaba faz — copter rakibe otonom yaklaştı (356m→0m intercept),
+        guidance tek-yazıcı setpoint yazdı; precise+kilit pure-python <30s; 115 test yeşil
 - [ ] Faz 5 — Kamikaze + HSS
 - [ ] Faz 6 — Mock server + video + tam döngü
 - [ ] Faz 7 — Senaryo runner + 8 KTR senaryosu
@@ -149,6 +155,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   last_locked_id ayrı ayrı test edildi. Sentetik hedef→mock tespit→Kalman/Hungarian takip→kilit denetimi
   uçtan uca doğru lock_event üretti (pure-Python entegrasyon testi + ROS grafiği demo). TensorRT/ONNX/USB
   kamera ⚠️ ON-DEVICE. Doğrulama: `make test` + `make run-perception-demo`.
+
+- **Kabul Kapısı 4** (2026-07-01): Güdüm cascade. target_selector (S skoru + lead-angle) ve guidance
+  (PID/PN/faz-FSM) çekirdekleri birim-test edildi. Hassas faz kapalı-döngü (piksel PID → merkezleme → kilit)
+  pure-python'da <30s; faz-FSM histerezis bandında flapping yok. SITL kaba faz: copter enjekte edilen rakibe
+  otonom yaklaştı (356m→0m), guidance yalnız active_service=GUIDANCE'te setpoint yazdı (tek-yazıcı).
+  Precise görsel-servo SITL kapalı-döngüsü kamera sim (⚠️ Gazebo) gerektirir — sim fazına ertelendi.
+  Doğrulama: `make test` + `make run-guidance-demo`. **NOT:** colcon bazen launch/config değişiminde bringup'ı
+  yeniden kurmuyor → demo öncesi `rm -rf install/gokdogan_bringup && make ws-build` veya temiz build önerilir.
 
 ## AÇIK SORUNLAR
 

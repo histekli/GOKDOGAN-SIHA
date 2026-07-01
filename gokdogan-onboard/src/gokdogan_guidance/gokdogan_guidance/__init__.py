@@ -1,5 +1,7 @@
-"""GÖKDOĞAN güdüm paketi. Faz 0: yalnız frames (ENU↔NED). Güdüm node'ları Faz 4'te."""
+"""GÖKDOĞAN güdüm paketi: frames (ENU↔NED), geo (WGS84→NED), controllers (PID/PN/faz-FSM)."""
 
+from . import geo  # noqa: F401
+from . import controllers  # noqa: F401
 from .frames import (  # noqa: F401
     wrap_to_pi,
     wrap_to_2pi,
