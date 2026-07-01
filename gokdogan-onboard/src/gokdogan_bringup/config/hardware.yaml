@@ -1,0 +1,25 @@
+# GÖKDOĞAN HARDWARE config (Jetson Xavier NX). ⚠️ ON-DEVICE DOĞRULAMA GEREKİR.
+# x86 dev'de test EDİLEMEZ (gerçek Pixhawk/UART). Saha ekibi doğrular. SAD §4/§8.
+mission_fsm:
+  ros__parameters:
+    vehicle: "ArduPlane"           # Gerçek araç sabit-kanat
+    takeoff_method: "auto_mission" # ArduPlane: AUTO + NAV_TAKEOFF (SITL param tuning'i sim fazında)
+    guided_mode: "GUIDED"
+    takeoff_alt_m: 40.0
+    arm_timeout_s: 90.0
+    connect_timeout_s: 90.0
+    publish_rate_hz: 1.0
+    control_rate_hz: 2.0
+    autostart: false               # Gerçekte lifecycle yöneticisi/operatör aktive eder
+
+aircraft_state:
+  ros__parameters:
+    publish_rate_hz: 20.0
+
+mavros:
+  ros__parameters:
+    fcu_url: "/dev/ttyTHS1:921600"  # Pixhawk Telem1 UART
+    gcs_url: ""
+    tgt_system: 1
+    tgt_component: 1
+    fcu_protocol: "v2.0"

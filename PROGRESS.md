@@ -66,6 +66,16 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
 - **[K-02] Gazebo Faz -1 kapsamı dışı.** Kabul Kapısı -1 (boş SITL takeoff) Gazebo gerektirmez — saf ArduPilot
   SITL headless uçar. gz/ros_gz köprüsü (SAD §25 açık nokta #1) sanal kamera gerektiğinde (Faz 3) netleştirilecek.
   Dev imajı SITL+MAVROS'a odaklı tutuldu ki kapı hızlı ve sağlam yeşile dönsün.
+- **[K-04] MAVROS launch'ta `name='mavros'` VERİLMEZ.** Launch Node'da `name='mavros'` zorlamak, MAVROS'un
+  `command` eklentisi servislerini (`/mavros/cmd/arming`, `/mavros/cmd/takeoff`) keşfedilemez yapıyordu
+  (`sys_status` servisleri — set_mode/set_stream_rate — çalışırken). name kaldırılınca command servisleri geldi.
+  (Faz 1'de günlerce süren teşhisin kök nedeni #1.)
+- **[K-05] Arm+takeoff BİRLEŞİK ve gecikmesiz gönderilir.** ArduCopter GUIDED'da arm sonrası ~1s içinde takeoff
+  gelmezse otomatik disarm ediyor. mission_fsm, arm ve takeoff'u tek worker adımında art arda yürütür
+  (`arm_takeoff` komutu). Ayrıca EKF/GPS için arm öncesi settle (prearm_settle_s). (Kök neden #2.)
+- **[K-06] MAVROS servis çağrıları ayrı context + senkron worker thread'de.** LifecycleNode+MultiThreadedExecutor
+  bağlamında `wait_for_service`/keşif güvenilmezdi; MAVROS komutları ayrı rclpy Context'li yardımcı node'da,
+  tek worker thread'de senkron (diag ile doğrulanmış düz-node deseni) yürütülür. Kontrol timer'ı bloklanmaz.
 - **[K-03] Faz -1 smoke test aracı = ArduCopter.** Kapı metni "GUIDED; arm; takeoff" copter idiyomuyla birebir ve
   headless'ta en güvenilir. Yarışma aracı sabit-kanat (plane); ArduPlane SITL Faz 1 bringup'ta (sitl.yaml) kurulacak
   (waf ccache ile ucuz). Faz -1 amacı: araç değil **toolchain** doğrulaması.
@@ -89,7 +99,13 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   - [x] contracts/: mission_link.schema.json (JSON Schema) + mission_link.md + 19 doğrulama testi (WPF FlightState map)
   - [x] pre-commit (black/flake8/clang-format) + .flake8 + pyproject + .clang-format; CI güncellendi
   - [x] **Kabul Kapısı 0:** colcon build (3 paket) ✅ · colcon test 52/52 ✅ · şema 19/19 ✅ · frames round-trip ✅
-- [ ] Faz 1 — MAVROS bringup + boş graph + SITL
+- [x] **Faz 1 — MAVROS bringup + boş graph + SITL** — ✅ **KABUL KAPISI 1 GEÇİLDİ**
+  - [x] gokdogan_bringup: competition.launch.py (mode:=sitl|hardware) + config/{sitl,hardware}.yaml + CycloneDDS config
+  - [x] gokdogan_mission_fsm: lifecycle node (IDLE), SetMissionMode srv, /mission/mode, tek-yazıcı active_service,
+        MAVROS set_mode/arming/takeoff (fsm_core 7 unit test)
+  - [x] gokdogan_mavlink_iface: /aircraft/state derleyici (MAVROS→AircraftState)
+  - [x] bringup launch_test (SITL'siz smoke) + run_sitl_stack.sh (tam SITL otonom kalkış)
+  - [x] **Kabul Kapısı 1:** SITL otonom kalkış → rel_alt 14.996m, FSM IDLE→TAKEOFF→CRUISE ✅; 63 test yeşil
 - [ ] Faz 2 — mission_link + Mock GCS
 - [ ] Faz 3 — Algı (dev modda)
 - [ ] Faz 4 — Güdüm & hedef seçimi

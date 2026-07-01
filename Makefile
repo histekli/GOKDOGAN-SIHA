@@ -31,9 +31,8 @@ verify-sitl: ## Kabul Kapısı -1 (b): boş SITL aracı GUIDED → arm → takeo
 sitl: ## Etkileşimli SITL başlat (ArduCopter, MAVProxy konsolu)
 	$(DRUN_IT) bash -c "sim_vehicle.py -v ArduCopter --console"
 
-run-sitl-stack: ## (Faz 1+) SITL + onboard graph — şimdilik verify-sitl'e yönlenir
-	@echo "Faz 1'de: SITL + MAVROS + mission_fsm. Şimdilik toolchain doğrulaması:"
-	$(MAKE) verify-sitl
+run-sitl-stack: ## SITL + onboard graph (MAVROS+FSM) → otonom kalkış (Kabul Kapısı 1)
+	$(DRUN) bash scripts/run_sitl_stack.sh
 
 ws-build: ## colcon workspace derle (Faz 0+ paketleri geldiğinde)
 	$(DRUN) bash -c "source /opt/ros/humble/setup.bash && cd $(WS) && colcon build --symlink-install"

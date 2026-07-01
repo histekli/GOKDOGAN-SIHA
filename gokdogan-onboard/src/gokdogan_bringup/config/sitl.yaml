@@ -1,0 +1,39 @@
+# GÖKDOĞAN SITL config (x86 dev). Tüm eşik/kazanç burada — sihirli sayı yok (§2.10).
+mission_fsm:
+  ros__parameters:
+    vehicle: "ArduCopter"          # Faz 1 bringup gate aracı (güvenilir GUIDED kalkış, K-04)
+    takeoff_method: "guided_takeoff"
+    guided_mode: "GUIDED"
+    takeoff_alt_m: 15.0
+    arm_timeout_s: 90.0        # arming servisi yavaş keşfediliyor (worker'da tek uzun bekleme)
+    connect_timeout_s: 60.0
+    publish_rate_hz: 1.0
+    control_rate_hz: 2.0
+    autostart: true                # SITL/CI: lifecycle configure→activate otomatik
+
+aircraft_state:
+  ros__parameters:
+    publish_rate_hz: 20.0
+
+mavros:
+  ros__parameters:
+    fcu_url: "tcp://127.0.0.1:5760"
+    gcs_url: ""
+    tgt_system: 1
+    tgt_component: 1
+    fcu_protocol: "v2.0"
+    # Yalnız ihtiyaç duyulan eklentiler (endpoint patlamasını önler → CycloneDDS keşif sağlığı;
+    # tüm ~64 eklenti yüklüyken /mavros/cmd/arming servisi keşfedilemiyordu). SAD §8.
+    plugin_allowlist:
+      - sys_status
+      - sys_time
+      - command
+      - global_position
+      - local_position
+      - imu
+      - setpoint_raw
+      - rc_io
+      - param
+      - waypoint
+      - battery
+    # ⚠️ Faz 4 (guidance) için ATTITUDE/LOCAL_POSITION stream rate ≥50Hz ayarı buraya eklenecek (SAD §8).
