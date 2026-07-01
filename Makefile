@@ -43,6 +43,9 @@ run-perception-demo: ## perception(synthetic)→tracking→lock_validator → ge
 run-guidance-demo: ## SITL + target_selector + guidance → rakibe kaba-faz yaklaşım (Kabul Kapısı 4)
 	$(DRUN) bash scripts/run_guidance_demo.sh
 
+run-hss-demo: ## SITL + hss (APF) → HSS bölgesini ihlal etmeden hedefe (Kabul Kapısı 5)
+	$(DRUN) bash scripts/run_hss_demo.sh
+
 mock-gcs: ## mock GCS'i çalıştır (referans yer istasyonu — onboard'a bağlanır)
 	$(DRUN_IT) bash -c "source /opt/ros/humble/setup.bash; source gokdogan-onboard/install/setup.bash; python3 tools/mock_gcs.py $(ARGS)"
 

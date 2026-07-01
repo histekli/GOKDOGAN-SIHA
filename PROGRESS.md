@@ -129,7 +129,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   - [x] Testler: geo/selector/controllers + precise kapalı-döngü (kilit <30s) + faz-flapping assert
   - [x] **Kabul Kapısı 4:** SITL kaba faz — copter rakibe otonom yaklaştı (356m→0m intercept),
         guidance tek-yazıcı setpoint yazdı; precise+kilit pure-python <30s; 115 test yeşil
-- [ ] Faz 5 — Kamikaze + HSS
+- [x] **Faz 5 — Kamikaze + HSS** — ✅ **KABUL KAPISI 5 GEÇİLDİ**
+  - [x] gokdogan_hss: APF (kenar-uzaklığı tabanlı itici, c→0'da patlar) + Dubins yerel-min yedeği; hss_node
+        (tek-yazıcı); mission_fsm tahkim (CRUISE'da HSS→SVC_HSS)
+  - [x] gokdogan_kamikaze: kamikaze_fsm (Intikal/Dalış/QR/PullUp + min-alt güvenlik pull-up, G≤3 clamp,
+        2 deneme) + qr.py (CLAHE+adaptive+perspektif+dual decode) + kamikaze_node (ExecuteKamikaze action)
+  - [x] Testler: APF 5 senaryo **0 ihlal** + Dubins; kamikaze FSM guard'ları; QR eğik plaka decode
+  - [x] **Kabul Kapısı 5:** SITL HSS kaçınma — copter HSS'i ihlal etmeden hedefe (min_clearance=5.5m>0,
+        active_service=SVC_HSS tahkim); kamikaze FSM+QR birim-test; 134 test yeşil
 - [ ] Faz 6 — Mock server + video + tam döngü
 - [ ] Faz 7 — Senaryo runner + 8 KTR senaryosu
 - [ ] Faz 8 — Failsafe & gözlemlenebilirlik
@@ -163,6 +170,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   Precise görsel-servo SITL kapalı-döngüsü kamera sim (⚠️ Gazebo) gerektirir — sim fazına ertelendi.
   Doğrulama: `make test` + `make run-guidance-demo`. **NOT:** colcon bazen launch/config değişiminde bringup'ı
   yeniden kurmuyor → demo öncesi `rm -rf install/gokdogan_bringup && make ws-build` veya temiz build önerilir.
+
+- **Kabul Kapısı 5** (2026-07-01): Kamikaze + HSS. APF (kenar-uzaklığı itici + Dubins) 5 senaryoda **0 ihlal**;
+  kamikaze FSM guard'ları (min-alt güvenlik pull-up, G≤3 clamp, 2 deneme) + QR pipeline eğik plaka decode
+  birim-test. SITL: mission_fsm CRUISE'da HSS bölgesi olunca yazma hakkını HSS'e verdi (SVC_HSS tahkim);
+  copter HSS'i ihlal etmeden (min_clearance=5.5m>0) hedefe ulaştı. Kamikaze dalışı sabit-kanat → sim fazına
+  ertelendi. **NOT:** SITL'de speedup 10 kontrol döngüsünü sim-zamanında 10x kabalaştırıp aşıma yol açıyor →
+  ince kontrol gerektiren senaryolar (HSS) speedup≤3 ile koşulmalı. Büyük graf keşif temposunu yavaşlatıyor →
+  odaklı demolar minimal node kümesiyle. Doğrulama: `make test` + `make run-hss-demo`.
 
 ## AÇIK SORUNLAR
 

@@ -66,6 +66,16 @@ def _setup(context, *args, **kwargs):
             package="gokdogan_guidance", executable="guidance_node",
             name="guidance", output="screen", parameters=[cfg],
         ))
+    if LaunchConfiguration("enable_hss").perform(context) == "true":
+        nodes.append(Node(
+            package="gokdogan_hss", executable="hss_node",
+            name="hss", output="screen", parameters=[cfg],
+        ))
+    if LaunchConfiguration("enable_kamikaze").perform(context) == "true":
+        nodes.append(Node(
+            package="gokdogan_kamikaze", executable="kamikaze_node",
+            name="kamikaze", output="screen", parameters=[cfg],
+        ))
     return nodes
 
 
@@ -79,5 +89,9 @@ def generate_launch_description():
                               description="aircraft_state node'unu başlat"),
         DeclareLaunchArgument("enable_guidance", default_value="true",
                               description="target_selector + guidance node'larını başlat"),
+        DeclareLaunchArgument("enable_hss", default_value="true",
+                              description="hss (APF kaçınma) node'unu başlat"),
+        DeclareLaunchArgument("enable_kamikaze", default_value="true",
+                              description="kamikaze action node'unu başlat"),
         OpaqueFunction(function=_setup),
     ])

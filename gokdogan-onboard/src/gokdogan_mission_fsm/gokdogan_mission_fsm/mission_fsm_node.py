@@ -22,7 +22,7 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandTOL, SetMode, StreamRate
 from std_msgs.msg import Float64
 
-from gokdogan_msgs.msg import MissionMode, MissionCommand
+from gokdogan_msgs.msg import MissionMode, MissionCommand, HssList
 from gokdogan_msgs.srv import SetMissionMode
 from gokdogan_common import qos
 
@@ -55,6 +55,7 @@ class MissionFsmNode(LifecycleNode):
         self._mav = State()
         self._rel_alt = None
         self._connected_since = None
+        self._hss_count = 0
         self._takeoff_phase = T_IDLE
         self._phase_t0 = 0.0
         self._pending = None          # (kullanılmıyor; _phase temizler)
@@ -88,6 +89,10 @@ class MissionFsmNode(LifecycleNode):
         self.create_subscription(
             MissionCommand, "/mission/command", self._on_command,
             qos.mission_command(), callback_group=cbg_io)
+        # HSS bölge sayısı (tahkim: CRUISE'da HSS varsa yazma hakkı HSS'e, §13)
+        self.create_subscription(
+            HssList, "/server/hss", lambda m: setattr(self, "_hss_count", len(m.zones)),
+            qos.server_data(), callback_group=cbg_io)
 
         # MAVROS servis çağrıları AYRI yardımcı node'da ve TEK bir worker thread'de
         # SENKRON yürütülür (diag ile doğrulanmış düz-node deseni: wait_for_service +
@@ -363,10 +368,17 @@ class MissionFsmNode(LifecycleNode):
             pass
 
     # ---- /mission/mode yayını ----
+    def _active_service(self):
+        """Tahkim (§13): CRUISE'da aktif HSS bölgesi varsa yazma hakkı HSS'e verilir."""
+        svc = self.core.active_service
+        if self.core.state == fc.CRUISE and self._hss_count > 0:
+            return MissionMode.SVC_HSS
+        return svc
+
     def _publish_mode(self):
         msg = MissionMode()
         msg.state = self.core.state
-        msg.active_service = self.core.active_service
+        msg.active_service = self._active_service()
         msg.detail = self._detail
         # lifecycle publisher yalnız active iken yayınlar
         try:

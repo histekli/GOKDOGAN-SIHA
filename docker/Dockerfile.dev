@@ -75,7 +75,8 @@ ENV PATH="${ARDUPILOT_HOME}/Tools/autotest:${ARDUPILOT_HOME}/build/sitl/bin:${PA
 #   - jsonschema: mission_link MessagePack şema doğrulaması (contracts/) için.
 # ---------------------------------------------------------------------------
 RUN python3 -m pip install "pytest==7.4.4" jsonschema \
-    "numpy==1.24.4" "scipy==1.10.1"
+    "numpy==1.24.4" "scipy==1.10.1" qrcode
+# qrcode: sentetik QR üretimi (kamikaze QR pipeline testi)
 # numpy/scipy uyumlu pin: pip numpy 2.x, apt scipy'nin numpy.Inf'ını kırıyordu;
 # 1.24.4/1.10.1 ROS2 Humble + onnxruntime + opencv ile uyumlu.
 

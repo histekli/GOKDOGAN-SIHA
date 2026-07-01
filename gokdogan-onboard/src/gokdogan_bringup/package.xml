@@ -16,6 +16,8 @@
   <exec_depend>gokdogan_mission_link</exec_depend>
   <exec_depend>gokdogan_target_selector</exec_depend>
   <exec_depend>gokdogan_guidance</exec_depend>
+  <exec_depend>gokdogan_hss</exec_depend>
+  <exec_depend>gokdogan_kamikaze</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 

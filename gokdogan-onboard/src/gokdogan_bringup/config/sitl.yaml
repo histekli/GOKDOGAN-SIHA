@@ -38,6 +38,19 @@ guidance:
     bbox_stale_s: 0.5
     control_rate_hz: 20.0
 
+hss:
+  ros__parameters:
+    k_att: 0.8
+    k_rep: 15.0
+    hss_margin_m: 40.0     # gerçek copter overshoot'una karşı geniş güvenlik (0 ihlal)
+    v_max: 8.0
+    lookahead_s: 1.5       # ince kontrol (aşımı azalt)
+    control_rate_hz: 20.0
+
+kamikaze:
+  ros__parameters:
+    timeout_s: 120.0
+
 mission_link:
   ros__parameters:
     udp_port: 5005
