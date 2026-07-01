@@ -1,0 +1,32 @@
+name: ci
+
+# GÖKDOĞAN x86 CI — dev imajı kurar, ortamı ve (paketler geldiğinde) colcon build+test'i doğrular.
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  dev-image-and-env:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Dev imajını kur (ROS2 Humble + ArduPilot SITL + MAVROS)
+        run: DOCKER_BUILDKIT=1 docker build -f docker/Dockerfile.dev -t gokdogan-dev:latest .
+
+      - name: Kabul Kapısı -1 (a) — ortam sürümleri
+        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest bash scripts/verify_env.sh
+
+      - name: Kabul Kapısı -1 (b) — SITL takeoff
+        run: docker run --rm --network host -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest bash scripts/sitl_smoke.sh
+
+      - name: colcon build (paketler mevcutsa — Faz 0+)
+        run: |
+          if [ -n "$(ls -A gokdogan-onboard/src 2>/dev/null)" ]; then
+            docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest \
+              bash -c "source /opt/ros/humble/setup.bash && cd gokdogan-onboard && colcon build --symlink-install && colcon test && colcon test-result --verbose"
+          else
+            echo "gokdogan-onboard/src boş — Faz 0'da paketler eklenince derlenecek. Atlanıyor."
+          fi

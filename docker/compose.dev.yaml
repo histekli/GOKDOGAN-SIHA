@@ -1,0 +1,25 @@
+# GÖKDOĞAN — dev/SITL compose (x86)
+# Kullanım:
+#   docker compose -f docker/compose.dev.yaml build
+#   docker compose -f docker/compose.dev.yaml run --rm dev bash
+#
+# Not: Onboard graph DDS'i ROS_LOCALHOST_ONLY=1 ile yalnız lo'da (İ4). Bu yüzden
+# ROS2 + SITL aynı container ağında (network_mode veya tek servis) çalışır.
+services:
+  dev:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.dev
+    image: gokdogan-dev:latest
+    container_name: gokdogan-dev
+    # SITL (5760/tcp), MAVROS ve mission_link (5005/udp, 5006/tcp) hepsi loopback → host net en basit.
+    network_mode: host
+    environment:
+      - ROS_LOCALHOST_ONLY=1
+      - RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+    volumes:
+      - ../:/workspace:cached
+    working_dir: /workspace
+    stdin_open: true
+    tty: true
+    command: bash
