@@ -34,6 +34,12 @@ sitl: ## Etkileşimli SITL başlat (ArduCopter, MAVProxy konsolu)
 run-sitl-stack: ## SITL + onboard graph (MAVROS+FSM) → otonom kalkış (Kabul Kapısı 1)
 	$(DRUN) bash scripts/run_sitl_stack.sh
 
+run-mission-link-demo: ## SITL + mission_link + mock_gcs → START_LOCK→LOCKING (Kabul Kapısı 2)
+	$(DRUN) bash scripts/run_mission_link_demo.sh
+
+mock-gcs: ## mock GCS'i çalıştır (referans yer istasyonu — onboard'a bağlanır)
+	$(DRUN_IT) bash -c "source /opt/ros/humble/setup.bash; source gokdogan-onboard/install/setup.bash; python3 tools/mock_gcs.py $(ARGS)"
+
 ws-build: ## colcon workspace derle (Faz 0+ paketleri geldiğinde)
 	$(DRUN) bash -c "source /opt/ros/humble/setup.bash && cd $(WS) && colcon build --symlink-install"
 

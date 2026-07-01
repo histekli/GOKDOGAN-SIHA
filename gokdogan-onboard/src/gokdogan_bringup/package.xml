@@ -13,6 +13,7 @@
   <exec_depend>mavros_extras</exec_depend>
   <exec_depend>gokdogan_mission_fsm</exec_depend>
   <exec_depend>gokdogan_mavlink_iface</exec_depend>
+  <exec_depend>gokdogan_mission_link</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
 

@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>gokdogan_mission_link</name>
+  <version>0.1.0</version>
+  <description>GÖKDOĞAN mission_link — ROS2↔GCS diller-arası köprü (UDP+TCP, MessagePack). SAD §9.</description>
+  <maintainer email="hasancan9091@gmail.com">GOKDOGAN Team</maintainer>
+  <license>Proprietary</license>
+
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>gokdogan_msgs</exec_depend>
+  <exec_depend>gokdogan_common</exec_depend>
+  <exec_depend>python3-msgpack</exec_depend>
+
+  <test_depend>python3-pytest</test_depend>
+  <test_depend>gokdogan_msgs</test_depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+  </export>
+</package>

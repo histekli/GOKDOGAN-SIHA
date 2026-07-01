@@ -106,7 +106,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   - [x] gokdogan_mavlink_iface: /aircraft/state derleyici (MAVROS→AircraftState)
   - [x] bringup launch_test (SITL'siz smoke) + run_sitl_stack.sh (tam SITL otonom kalkış)
   - [x] **Kabul Kapısı 1:** SITL otonom kalkış → rel_alt 14.996m, FSM IDLE→TAKEOFF→CRUISE ✅; 63 test yeşil
-- [ ] Faz 2 — mission_link + Mock GCS
+- [x] **Faz 2 — mission_link + Mock GCS** — ✅ **KABUL KAPISI 2 GEÇİLDİ**
+  - [x] gokdogan_mission_link: UDP 5005 (aircraft_vision↑) + TCP 5006 (kontrol) köprü; heartbeat, reconnect,
+        seq/ts, MessagePack length-prefix; protocol.py (bozuk/partial frame dayanıklı)
+  - [x] mission_fsm: /mission/command (operatör) girişi → DFA geçişi (START_LOCK/ABORT/KAMIKAZE/SET_MODE)
+  - [x] tools/mock_gcs.py: referans GCS (WPF taklidi) — TCP/UDP, exp-backoff reconnect, komut/relay
+  - [x] Testler: protocol unit (framing/corrupt/partial/1000-paket) + entegrasyon (çift-yön + TCP kopma/reconnect)
+  - [x] **Kabul Kapısı 2:** SITL→CRUISE→mock_gcs START_LOCK→FSM LOCKING; 141 aircraft_vision paketi (0 gap/0 bad);
+        72 test yeşil
 - [ ] Faz 3 — Algı (dev modda)
 - [ ] Faz 4 — Güdüm & hedef seçimi
 - [ ] Faz 5 — Kamikaze + HSS
@@ -126,6 +133,11 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   18 frames param); mission_link JSON Schema 19/19 geçti (geçerli örnekler valide, bozuklar reddedildi,
   WPF FlightState eşleme alanları mevcut). Doğrulama: `make ws-build` + `make test`.
   ⚠️ **Bu noktadan sonra kontratlar (msgs + mission_link şeması) değişiklik için onay gerektirir.**
+- **Kabul Kapısı 1** (2026-07-01): SITL otonom kalkış — operatör TAKEOFF → araç ~15m'ye çıktı, FSM IDLE→TAKEOFF→CRUISE
+  (2x tekrarlanabilir). Doğrulama: `make run-sitl-stack`.
+- **Kabul Kapısı 2** (2026-07-01): mission_link çift-yön + kopma dayanıklılığı. SITL→CRUISE→mock_gcs START_LOCK→
+  FSM LOCKING; mock_gcs 141 aircraft_vision paketi aldı (0 seq-gap, 0 bad-frame). protocol 1000-paket loss/disorder
+  testi çökmesiz. Doğrulama: `make run-mission-link-demo` + `make test`.
 
 ## AÇIK SORUNLAR
 

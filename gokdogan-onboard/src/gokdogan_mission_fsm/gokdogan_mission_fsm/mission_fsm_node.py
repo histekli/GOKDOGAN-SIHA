@@ -22,7 +22,7 @@ from mavros_msgs.msg import State
 from mavros_msgs.srv import CommandBool, CommandTOL, SetMode, StreamRate
 from std_msgs.msg import Float64
 
-from gokdogan_msgs.msg import MissionMode
+from gokdogan_msgs.msg import MissionMode, MissionCommand
 from gokdogan_msgs.srv import SetMissionMode
 from gokdogan_common import qos
 
@@ -84,6 +84,10 @@ class MissionFsmNode(LifecycleNode):
         self._srv = self.create_service(
             SetMissionMode, "~/set_mission_mode", self._on_set_mode,
             callback_group=cbg_io)
+        # Operatör komutu (mission_link → /mission/command → FSM geçişi, SAD §12)
+        self.create_subscription(
+            MissionCommand, "/mission/command", self._on_command,
+            qos.mission_command(), callback_group=cbg_io)
 
         # MAVROS servis çağrıları AYRI yardımcı node'da ve TEK bir worker thread'de
         # SENKRON yürütülür (diag ile doğrulanmış düz-node deseni: wait_for_service +
@@ -139,18 +143,14 @@ class MissionFsmNode(LifecycleNode):
     def _on_alt(self, msg):
         self._rel_alt = msg.data
 
-    # ---- servis: yüksek-seviye geçiş ----
-    def _on_set_mode(self, req, resp):
-        target = req.mode
+    # ---- ortak geçiş uygulaması (servis + operatör komutu) ----
+    def _apply_transition(self, target):
+        """DFA geçişini guard'larla uygular. (ok, reason) döndürür."""
         # TAKEOFF için yazılım kapısı: MAVROS bağlı olmalı (arming check benzeri, §5.2)
         if target == fc.TAKEOFF and not self._mav.connected:
-            resp.success = False
-            resp.message = "MAVROS bağlı değil — IDLE'da kal (degraded)"
-            self.get_logger().warn(resp.message)
-            return resp
+            self.get_logger().warn("MAVROS bağlı değil — TAKEOFF reddedildi (degraded)")
+            return False, "MAVROS bağlı değil"
         ok, reason = self.core.transition(target)
-        resp.success = ok
-        resp.message = reason
         if ok:
             self.get_logger().info(f"FSM geçiş → {self.core.state_name} ({reason})")
             if target == fc.TAKEOFF:
@@ -160,7 +160,37 @@ class MissionFsmNode(LifecycleNode):
             self._publish_mode()
         else:
             self.get_logger().warn(f"Geçiş reddedildi: {reason}")
+        return ok, reason
+
+    # ---- servis: yüksek-seviye geçiş ----
+    def _on_set_mode(self, req, resp):
+        resp.success, resp.message = self._apply_transition(req.mode)
         return resp
+
+    # ---- operatör komutu (mission_link → /mission/command) ----
+    def _on_command(self, msg):
+        t = msg.type
+        if t == MissionCommand.START_LOCK:
+            self._apply_transition(fc.LOCKING)
+        elif t == MissionCommand.ABORT:
+            self._apply_transition(fc.CRUISE)
+        elif t == MissionCommand.START_KAMIKAZE:
+            self._apply_transition(fc.KAMIKAZE)
+        elif t == MissionCommand.SELECT_TARGET:
+            self.get_logger().info(f"SELECT_TARGET hedef={msg.target_id} (Faz 4 target_selector)")
+        elif t == MissionCommand.SET_MODE:
+            self._apply_command_set_mode(msg.mode)
+        else:
+            self.get_logger().warn(f"bilinmeyen MissionCommand.type={t}")
+
+    def _apply_command_set_mode(self, mode):
+        m = (mode or "").upper()
+        mapping = {"TAKEOFF": fc.TAKEOFF, "RTL": fc.RTL, "LAND": fc.LAND,
+                   "CRUISE": fc.CRUISE, "MANUAL": fc.MANUAL}
+        if m in mapping:
+            self._apply_transition(mapping[m])
+        else:
+            self.get_logger().info(f"SET_MODE '{mode}' — doğrudan MAVLink modu (FSM geçişi yok)")
 
     # ---- kalkış sekanslayıcı (bloklamaz) ----
     def _start_takeoff(self):

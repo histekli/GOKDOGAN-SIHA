@@ -46,7 +46,12 @@ def _setup(context, *args, **kwargs):
         name="mission_fsm", output="screen", parameters=[cfg],
     )
 
-    nodes = [mavros, mission_fsm]
+    mission_link = Node(
+        package="gokdogan_mission_link", executable="mission_link_node",
+        name="mission_link", output="screen", parameters=[cfg],
+    )
+
+    nodes = [mavros, mission_fsm, mission_link]
     if LaunchConfiguration("enable_aircraft_state").perform(context) == "true":
         nodes.append(Node(
             package="gokdogan_mavlink_iface", executable="aircraft_state_node",

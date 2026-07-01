@@ -15,6 +15,15 @@ aircraft_state:
   ros__parameters:
     publish_rate_hz: 20.0
 
+mission_link:
+  ros__parameters:
+    udp_port: 5005
+    tcp_port: 5006
+    vision_rate_hz: 20.0
+    heartbeat_hz: 1.0
+    heartbeat_timeout_s: 5.0
+    schema_path: ""     # doldurulursa gelen mesajlar JSON Schema ile doğrulanır
+
 mavros:
   ros__parameters:
     fcu_url: "tcp://127.0.0.1:5760"
