@@ -114,7 +114,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   - [x] Testler: protocol unit (framing/corrupt/partial/1000-paket) + entegrasyon (çift-yön + TCP kopma/reconnect)
   - [x] **Kabul Kapısı 2:** SITL→CRUISE→mock_gcs START_LOCK→FSM LOCKING; 141 aircraft_vision paketi (0 gap/0 bad);
         72 test yeşil
-- [ ] Faz 3 — Algı (dev modda)
+- [x] **Faz 3 — Algı (dev modda)** — ✅ **KABUL KAPISI 3 GEÇİLDİ**
+  - [x] gokdogan_perception: kamera abstraction (synthetic/video/gazebo/⚠️usb) + inference (mock renk-blob /
+        ⚠️onnx / ⚠️tensorrt) + ROI %70→640→geri; perception_node
+  - [x] gokdogan_tracking: Kalman [px,py,vx,vy,ax,ay] + Hungarian (Cost=1−IoU, IoU≥0.3) + track yönetimi + node
+  - [x] gokdogan_lock_validator: **5 kural** (merkez/boyut/içerme/yerde-reddi/otonom) + zaman penceresi
+        (5s/4s/200ms) + last_locked_id; node
+  - [x] Testler: 5 kuralın HER biri + zaman penceresi + last_locked_id + tracking + **sentetik pipeline entegrasyon**
+  - [x] **Kabul Kapısı 3:** sentetik hedef→tespit→takip→doğru lock_event (pure-Python + ROS grafiği); 92 test yeşil
 - [ ] Faz 4 — Güdüm & hedef seçimi
 - [ ] Faz 5 — Kamikaze + HSS
 - [ ] Faz 6 — Mock server + video + tam döngü
@@ -138,6 +145,10 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
 - **Kabul Kapısı 2** (2026-07-01): mission_link çift-yön + kopma dayanıklılığı. SITL→CRUISE→mock_gcs START_LOCK→
   FSM LOCKING; mock_gcs 141 aircraft_vision paketi aldı (0 seq-gap, 0 bad-frame). protocol 1000-paket loss/disorder
   testi çökmesiz. Doğrulama: `make run-mission-link-demo` + `make test`.
+- **Kabul Kapısı 3** (2026-07-01): Algı pipeline. 5 kilit kuralının her biri + zaman penceresi (5s/4s/200ms) +
+  last_locked_id ayrı ayrı test edildi. Sentetik hedef→mock tespit→Kalman/Hungarian takip→kilit denetimi
+  uçtan uca doğru lock_event üretti (pure-Python entegrasyon testi + ROS grafiği demo). TensorRT/ONNX/USB
+  kamera ⚠️ ON-DEVICE. Doğrulama: `make test` + `make run-perception-demo`.
 
 ## AÇIK SORUNLAR
 

@@ -37,6 +37,9 @@ run-sitl-stack: ## SITL + onboard graph (MAVROS+FSM) → otonom kalkış (Kabul 
 run-mission-link-demo: ## SITL + mission_link + mock_gcs → START_LOCK→LOCKING (Kabul Kapısı 2)
 	$(DRUN) bash scripts/run_mission_link_demo.sh
 
+run-perception-demo: ## perception(synthetic)→tracking→lock_validator → geçerli kilit (Kabul Kapısı 3)
+	$(DRUN) bash scripts/run_perception_demo.sh
+
 mock-gcs: ## mock GCS'i çalıştır (referans yer istasyonu — onboard'a bağlanır)
 	$(DRUN_IT) bash -c "source /opt/ros/humble/setup.bash; source gokdogan-onboard/install/setup.bash; python3 tools/mock_gcs.py $(ARGS)"
 

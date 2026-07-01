@@ -74,7 +74,10 @@ ENV PATH="${ARDUPILOT_HOME}/Tools/autotest:${ARDUPILOT_HOME}/build/sitl/bin:${PA
 #   - pytest 7.x pinlenir: 8.x ROS2 Humble launch_testing eklentisini bozar (hookspec 'path').
 #   - jsonschema: mission_link MessagePack şema doğrulaması (contracts/) için.
 # ---------------------------------------------------------------------------
-RUN python3 -m pip install "pytest==7.4.4" jsonschema
+RUN python3 -m pip install "pytest==7.4.4" jsonschema \
+    "numpy==1.24.4" "scipy==1.10.1"
+# numpy/scipy uyumlu pin: pip numpy 2.x, apt scipy'nin numpy.Inf'ını kırıyordu;
+# 1.24.4/1.10.1 ROS2 Humble + onnxruntime + opencv ile uyumlu.
 
 # ---------------------------------------------------------------------------
 # 4) colcon workspace mount noktası + entrypoint (ROS + ArduPilot ortamı)
