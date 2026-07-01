@@ -1,0 +1,24 @@
+# Kamikaze alt-FSM (uzun süreli). SAD §7/§12. feedback=faz.
+# Goal
+int32 target_id
+float64 target_lat
+float64 target_lon
+float32 target_alt
+---
+# Result
+bool success
+string qr_text          # okunan QR metni (boş = okunamadı)
+float32 max_g           # dalış/pull-up sırasında görülen maks G
+string detail
+---
+# Feedback — faz ilerlemesi
+uint8 PHASE_IDLE=0
+uint8 PHASE_INTIKAL=1    # 100m, Pure Pursuit
+uint8 PHASE_DALIS=2      # -45°, TECS, 28-30 m/s
+uint8 PHASE_QR=3         # 50m altı, perspektif + dual decode
+uint8 PHASE_PULLUP=4     # R=45m, 2.7G, min irtifa
+uint8 phase
+float32 altitude
+float32 airspeed
+float32 g_load
+string detail

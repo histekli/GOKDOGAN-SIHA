@@ -81,7 +81,14 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   - [x] docker/compose.dev.yaml + Makefile + scripts
   - [x] Dev imajı build (gokdogan-dev:latest, 5.16GB)
   - [x] **Kabul Kapısı -1:** ros2 humble + colcon 0.20.1 + sim_vehicle.py --help ✅ + SITL GUIDED/arm/takeoff → 9.21m ✅
-- [ ] Faz 0 — Bootstrap & kontratları dondur (gokdogan_msgs, mission_link şeması, qos, frames)
+- [x] **Faz 0 — Bootstrap & kontratları DONDUR** — ✅ **KABUL KAPISI 0 GEÇİLDİ**
+  - [x] gokdogan_msgs: 13 msg + 2 srv + 1 action (BBox/Track/Tracks/Detections/LockEvent/Target/
+        MissionMode/MissionCommand/Opponent/Opponents/Hss/HssList/AircraftState; SetMissionMode/ArmDisarm; ExecuteKamikaze)
+  - [x] gokdogan_common: merkezî QoS (qos.hpp + qos.py, 7 profil) + C++/Python parite testleri
+  - [x] gokdogan_guidance: frames (ENU↔NED, hpp + py) + round-trip identity testleri
+  - [x] contracts/: mission_link.schema.json (JSON Schema) + mission_link.md + 19 doğrulama testi (WPF FlightState map)
+  - [x] pre-commit (black/flake8/clang-format) + .flake8 + pyproject + .clang-format; CI güncellendi
+  - [x] **Kabul Kapısı 0:** colcon build (3 paket) ✅ · colcon test 52/52 ✅ · şema 19/19 ✅ · frames round-trip ✅
 - [ ] Faz 1 — MAVROS bringup + boş graph + SITL
 - [ ] Faz 2 — mission_link + Mock GCS
 - [ ] Faz 3 — Algı (dev modda)
@@ -98,6 +105,11 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
   `colcon` (0.20.1), `sim_vehicle.py --help` (ArduPilot SITL), MAVROS paketi mevcut; boş ArduCopter
   SITL aracı headless GUIDED moda geçip arm oldu ve NAV_TAKEOFF ile 9.21 m'ye çıktı. Doğrulama:
   `make verify-env` + `make verify-sitl` (scripts/verify_env.sh, scripts/sitl_smoke.sh, scripts/smoke_takeoff.py).
+- **Kabul Kapısı 0** (2026-07-01): Kontratlar DONDURULDU. `colcon build` 3 paket (gokdogan_msgs/common/guidance)
+  yeşil; `colcon test` 52 test / 0 hata / 0 başarısızlık (C++ gtest QoS+frames parite, Python QoS golden +
+  18 frames param); mission_link JSON Schema 19/19 geçti (geçerli örnekler valide, bozuklar reddedildi,
+  WPF FlightState eşleme alanları mevcut). Doğrulama: `make ws-build` + `make test`.
+  ⚠️ **Bu noktadan sonra kontratlar (msgs + mission_link şeması) değişiklik için onay gerektirir.**
 
 ## AÇIK SORUNLAR
 

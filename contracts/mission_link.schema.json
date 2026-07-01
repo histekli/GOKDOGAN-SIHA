@@ -1,0 +1,196 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://gokdogan.teknofest/mission_link.schema.json",
+  "title": "GÖKDOĞAN mission_link protokolü (DONDURULMUŞ, SAD §9)",
+  "description": "Jetson (ROS2) ↔ GCS (WPF) diller-arası tek sınır. Taşıma: UDP 5005 (akış, latest-wins) + TCP 5006 (kontrol, 4B BE length-prefixed + MessagePack). Her mesaj zarfı: type, seq, ts. Bu şema dil-bağımsızdır (MessagePack decode → JSON tipleri).",
+
+  "$defs": {
+    "bbox": {
+      "type": "object",
+      "description": "1920x1200 kamera uzayında dörtgen (merkez 960,600).",
+      "properties": {
+        "x": {"type": "number"},
+        "y": {"type": "number"},
+        "w": {"type": "number", "minimum": 0},
+        "h": {"type": "number", "minimum": 0},
+        "score": {"type": "number", "minimum": 0, "maximum": 1},
+        "track_id": {"type": "integer"}
+      },
+      "required": ["x", "y", "w", "h"],
+      "additionalProperties": false
+    },
+    "opponent": {
+      "type": "object",
+      "description": "Rakip telemetrisi (KTR alan adları).",
+      "properties": {
+        "takim_no": {"type": "integer"},
+        "enlem": {"type": "number"},
+        "boylam": {"type": "number"},
+        "irtifa": {"type": "number"},
+        "dikilme": {"type": "number", "minimum": -90, "maximum": 90},
+        "yonelme": {"type": "number", "minimum": 0, "maximum": 360},
+        "yatis": {"type": "number", "minimum": -90, "maximum": 90},
+        "hiz": {"type": "number"},
+        "zaman_farki": {"type": "number"}
+      },
+      "required": ["takim_no", "enlem", "boylam"],
+      "additionalProperties": false
+    },
+    "hss": {
+      "type": "object",
+      "description": "HSS yasak bölgesi.",
+      "properties": {
+        "id": {"type": "integer"},
+        "enlem": {"type": "number"},
+        "boylam": {"type": "number"},
+        "yaricap": {"type": "number", "minimum": 0}
+      },
+      "required": ["id", "enlem", "boylam", "yaricap"],
+      "additionalProperties": false
+    },
+
+    "aircraft_vision": {
+      "type": "object",
+      "description": "UDP↑ ~15-30Hz. Yalnız GÖSTERİM/overlay (kontrol değil). Alanlar WPF FlightState'e BİREBİR map.",
+      "properties": {
+        "type": {"const": "aircraft_vision"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "target_center_x": {"type": ["number", "null"], "description": "WPF FlightState.TargetCenterX"},
+        "target_center_y": {"type": ["number", "null"], "description": "WPF FlightState.TargetCenterY"},
+        "target_width": {"type": ["number", "null"], "description": "WPF FlightState.TargetWidth"},
+        "target_height": {"type": ["number", "null"], "description": "WPF FlightState.TargetHeight"},
+        "is_locked": {"type": "boolean", "description": "WPF FlightState.IsLocked"},
+        "lock_progress_s": {"type": "number", "minimum": 0, "maximum": 4},
+        "target_team_number": {"type": ["integer", "null"], "description": "WPF FlightState.TargetTeamNumber"},
+        "score": {"type": ["number", "null"]},
+        "fsm_state": {"type": "integer", "minimum": 0, "maximum": 7, "description": "MissionMode.state"},
+        "active_service": {"type": "integer", "minimum": 0}
+      },
+      "required": ["type", "seq", "ts", "is_locked", "fsm_state"],
+      "additionalProperties": false
+    },
+
+    "lock_valid": {
+      "type": "object",
+      "description": "TCP↑ olay. Onboard geçerli kilidi bildirir → GCS KilitlenmeBilgisiGonder (≤2s).",
+      "properties": {
+        "type": {"const": "lock_valid"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "valid": {"type": "boolean"},
+        "target_id": {"type": "integer"},
+        "target_team_number": {"type": ["integer", "null"]},
+        "center": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2},
+        "box": {"$ref": "#/$defs/bbox"},
+        "lock_end_ts": {"type": "number"}
+      },
+      "required": ["type", "seq", "ts", "valid", "target_id"],
+      "additionalProperties": false
+    },
+
+    "kamikaze_result": {
+      "type": "object",
+      "description": "TCP↑ olay. QR + pull-up sonucu → GCS KamikazeBilgisiGonder (≤2s).",
+      "properties": {
+        "type": {"const": "kamikaze_result"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "success": {"type": "boolean"},
+        "qr_text": {"type": "string"},
+        "max_g": {"type": "number"},
+        "detail": {"type": "string"}
+      },
+      "required": ["type", "seq", "ts", "success"],
+      "additionalProperties": false
+    },
+
+    "operator_cmd": {
+      "type": "object",
+      "description": "TCP↓ komut. GCS → onboard FSM (yüksek-seviye operatör komutu).",
+      "properties": {
+        "type": {"const": "operator_cmd"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "cmd": {"enum": ["START_LOCK", "ABORT", "SELECT_TARGET", "START_KAMIKAZE", "SET_MODE"]},
+        "target_id": {"type": ["integer", "null"]},
+        "mode": {"type": ["string", "null"]},
+        "params": {"type": ["object", "null"]}
+      },
+      "required": ["type", "seq", "ts", "cmd"],
+      "additionalProperties": false
+    },
+
+    "server_data": {
+      "type": "object",
+      "description": "TCP↓ relay. GCS (HttpClient) → onboard: rakip/HSS/QR/sunucu saati.",
+      "properties": {
+        "type": {"const": "server_data"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "opponents": {"type": "array", "items": {"$ref": "#/$defs/opponent"}},
+        "hss": {"type": "array", "items": {"$ref": "#/$defs/hss"}},
+        "qr": {
+          "type": ["object", "null"],
+          "properties": {
+            "lat": {"type": "number"},
+            "lon": {"type": "number"},
+            "alt": {"type": "number"}
+          },
+          "required": ["lat", "lon"],
+          "additionalProperties": false
+        },
+        "server_time": {"type": ["number", "null"], "description": "ServerClock (sunucu saati)"}
+      },
+      "required": ["type", "seq", "ts"],
+      "additionalProperties": false
+    },
+
+    "config": {
+      "type": "object",
+      "description": "TCP↓. GCS AutonomyOptions → onboard target_selector ağırlıkları. Tek doğruluk kaynağı GCS.",
+      "properties": {
+        "type": {"const": "config"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "autonomy_weights": {
+          "type": "object",
+          "description": "S = 0.40·mesafe + 0.30·aci + 0.20·gecmis − 0.10·risk",
+          "properties": {
+            "mesafe": {"type": "number"},
+            "aci": {"type": "number"},
+            "gecmis": {"type": "number"},
+            "risk": {"type": "number"}
+          },
+          "required": ["mesafe", "aci", "gecmis", "risk"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["type", "seq", "ts", "autonomy_weights"],
+      "additionalProperties": false
+    },
+
+    "heartbeat": {
+      "type": "object",
+      "description": "Her iki kanal, 1Hz app-level. Kopma tespiti.",
+      "properties": {
+        "type": {"const": "heartbeat"},
+        "seq": {"type": "integer", "minimum": 0},
+        "ts": {"type": "number"},
+        "role": {"enum": ["onboard", "gcs"]}
+      },
+      "required": ["type", "seq", "ts"],
+      "additionalProperties": false
+    }
+  },
+
+  "oneOf": [
+    {"$ref": "#/$defs/aircraft_vision"},
+    {"$ref": "#/$defs/lock_valid"},
+    {"$ref": "#/$defs/kamikaze_result"},
+    {"$ref": "#/$defs/operator_cmd"},
+    {"$ref": "#/$defs/server_data"},
+    {"$ref": "#/$defs/config"},
+    {"$ref": "#/$defs/heartbeat"}
+  ]
+}

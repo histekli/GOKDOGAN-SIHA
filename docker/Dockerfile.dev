@@ -70,6 +70,13 @@ RUN ./waf configure --board sitl && \
 ENV PATH="${ARDUPILOT_HOME}/Tools/autotest:${ARDUPILOT_HOME}/build/sitl/bin:${PATH}"
 
 # ---------------------------------------------------------------------------
+# 3.5) Test araçları (ArduPilot katmanından SONRA — cache korunur):
+#   - pytest 7.x pinlenir: 8.x ROS2 Humble launch_testing eklentisini bozar (hookspec 'path').
+#   - jsonschema: mission_link MessagePack şema doğrulaması (contracts/) için.
+# ---------------------------------------------------------------------------
+RUN python3 -m pip install "pytest==7.4.4" jsonschema
+
+# ---------------------------------------------------------------------------
 # 4) colcon workspace mount noktası + entrypoint (ROS + ArduPilot ortamı)
 # ---------------------------------------------------------------------------
 WORKDIR /workspace

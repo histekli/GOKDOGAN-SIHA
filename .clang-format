@@ -1,0 +1,11 @@
+# GÖKDOĞAN C++ stil (ROS2 benzeri: 2-space, 100 kolon).
+BasedOnStyle: Google
+IndentWidth: 2
+ColumnLimit: 100
+AccessModifierOffset: -2
+AlignAfterOpenBracket: AlignAfterOperator
+AllowShortFunctionsOnASingleLine: Inline
+DerivePointerAlignment: false
+PointerAlignment: Middle
+ReflowComments: false
+SortIncludes: false

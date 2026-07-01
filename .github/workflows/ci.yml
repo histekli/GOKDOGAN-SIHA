@@ -22,11 +22,14 @@ jobs:
       - name: Kabul Kapısı -1 (b) — SITL takeoff
         run: docker run --rm --network host -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest bash scripts/sitl_smoke.sh
 
-      - name: colcon build (paketler mevcutsa — Faz 0+)
+      - name: colcon build + test (Faz 0+ paketleri)
         run: |
           if [ -n "$(ls -A gokdogan-onboard/src 2>/dev/null)" ]; then
             docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest \
-              bash -c "source /opt/ros/humble/setup.bash && cd gokdogan-onboard && colcon build --symlink-install && colcon test && colcon test-result --verbose"
+              bash -c "set +u; source /opt/ros/humble/setup.bash; set -u; cd gokdogan-onboard && colcon build --symlink-install && colcon test && colcon test-result --all"
           else
-            echo "gokdogan-onboard/src boş — Faz 0'da paketler eklenince derlenecek. Atlanıyor."
+            echo "gokdogan-onboard/src boş — atlanıyor."
           fi
+
+      - name: mission_link JSON Schema doğrulaması (Faz 0 kontratı)
+        run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace gokdogan-dev:latest bash -c "python3 -m pytest -q contracts/test_mission_link_schema.py"

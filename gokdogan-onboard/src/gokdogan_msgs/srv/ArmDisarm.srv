@@ -1,0 +1,5 @@
+# Arm/disarm iste (MAVROS köprüsü üzerinden). SAD §7/§8.
+bool arm                # true=arm, false=disarm
+---
+bool success
+string message

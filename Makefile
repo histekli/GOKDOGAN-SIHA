@@ -10,7 +10,7 @@ WS         ?= /workspace/gokdogan-onboard
 DRUN = docker run --rm --network host -v $(PWD):/workspace -w /workspace $(IMAGE)
 DRUN_IT = docker run --rm -it --network host -v $(PWD):/workspace -w /workspace $(IMAGE)
 
-.PHONY: help build shell verify-env verify-sitl sitl run-sitl-stack ws-build test lint clean
+.PHONY: help build shell verify-env verify-sitl sitl run-sitl-stack ws-build test schema-test lint clean
 
 help: ## Bu yardımı göster
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -38,8 +38,12 @@ run-sitl-stack: ## (Faz 1+) SITL + onboard graph — şimdilik verify-sitl'e yö
 ws-build: ## colcon workspace derle (Faz 0+ paketleri geldiğinde)
 	$(DRUN) bash -c "source /opt/ros/humble/setup.bash && cd $(WS) && colcon build --symlink-install"
 
-test: ## colcon test (Faz 0+)
-	$(DRUN) bash -c "source /opt/ros/humble/setup.bash && cd $(WS) && colcon test && colcon test-result --verbose"
+test: ## colcon test (Faz 0+) + mission_link şema testi
+	$(DRUN) bash -c "set +u; source /opt/ros/humble/setup.bash; set -u; cd $(WS) && colcon test && colcon test-result --all"
+	$(MAKE) schema-test
+
+schema-test: ## mission_link JSON Schema doğrulaması (contracts/)
+	$(DRUN) bash -c "python3 -m pytest -q contracts/test_mission_link_schema.py"
 
 lint: ## flake8 + black --check (Faz 0+ python)
 	$(DRUN) bash -c "cd /workspace && black --check . 2>/dev/null; flake8 --max-line-length=120 . 2>/dev/null || true"

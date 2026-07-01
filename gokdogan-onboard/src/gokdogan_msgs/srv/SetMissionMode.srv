@@ -1,0 +1,6 @@
+# Görev FSM durum geçişi iste. SAD §7/§12.
+uint8 mode              # MissionMode.state hedefi
+string params_json      # opsiyonel parametreler
+---
+bool success
+string message
