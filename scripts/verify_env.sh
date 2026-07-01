@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Kabul Kapısı -1 (a): araç zinciri sürüm doğrulaması.
-set -euo pipefail
-source /opt/ros/humble/setup.bash
+set -eo pipefail
+set +u; source /opt/ros/humble/setup.bash; set -u
 
 echo "=========================================================="
 echo " GÖKDOĞAN Kabul Kapısı -1 (a) — ortam sürümleri"

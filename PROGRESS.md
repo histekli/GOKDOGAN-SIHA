@@ -74,13 +74,13 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
 
 ## FAZ CHECKLIST
 
-- [ ] **Faz -1 — Geliştirme ortamı** (dev container + SITL) — *devam ediyor*
+- [x] **Faz -1 — Geliştirme ortamı** (dev container + SITL) — ✅ **KABUL KAPISI -1 GEÇİLDİ**
   - [x] Repo iskeleti + git init
   - [x] docker/Dockerfile.dev (ROS2 Humble + ArduPilot SITL + MAVROS + python deps)
   - [x] docker/Dockerfile.jetson-humble (⚠️ ON-DEVICE, test edilemez)
   - [x] docker/compose.dev.yaml + Makefile + scripts
-  - [ ] Dev imajı build
-  - [ ] **Kabul Kapısı -1:** ros2 --version (Humble) + colcon version + sim_vehicle.py --help + SITL GUIDED/arm/takeoff
+  - [x] Dev imajı build (gokdogan-dev:latest, 5.16GB)
+  - [x] **Kabul Kapısı -1:** ros2 humble + colcon 0.20.1 + sim_vehicle.py --help ✅ + SITL GUIDED/arm/takeoff → 9.21m ✅
 - [ ] Faz 0 — Bootstrap & kontratları dondur (gokdogan_msgs, mission_link şeması, qos, frames)
 - [ ] Faz 1 — MAVROS bringup + boş graph + SITL
 - [ ] Faz 2 — mission_link + Mock GCS
@@ -94,7 +94,10 @@ Emircan=perception; Kenan=sim/güdüm-tuning; Hüseyin=WPF GCS.
 
 ## GEÇİLEN KABUL KAPILARI
 
-- (henüz yok)
+- **Kabul Kapısı -1** (2026-07-01): Dev container build oldu; container içinde `ros2` (Humble),
+  `colcon` (0.20.1), `sim_vehicle.py --help` (ArduPilot SITL), MAVROS paketi mevcut; boş ArduCopter
+  SITL aracı headless GUIDED moda geçip arm oldu ve NAV_TAKEOFF ile 9.21 m'ye çıktı. Doğrulama:
+  `make verify-env` + `make verify-sitl` (scripts/verify_env.sh, scripts/sitl_smoke.sh, scripts/smoke_takeoff.py).
 
 ## AÇIK SORUNLAR
 

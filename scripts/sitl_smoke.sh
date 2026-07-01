@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Kabul Kapısı -1 (b): boş ArduCopter SITL aracını headless kaldır (GUIDED → arm → takeoff).
 # Container içinde koşar. sim_vehicle.py'yi MAVProxy'siz başlatır; araç MAVLink'i tcp:5760'ta sunar.
-set -uo pipefail
-source /opt/ros/humble/setup.bash
+set -o pipefail
+set +u; source /opt/ros/humble/setup.bash; set -u
 
 AP="${ARDUPILOT_HOME:-/opt/ardupilot}"
 WORK="$(mktemp -d /tmp/sitl.XXXXXX)"
