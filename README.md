@@ -7,7 +7,7 @@ TEKNOFEST Savaşan İHA 2026 (Takım ID 759667) onboard otonomi + GCS entegrasyo
 
 - 📘 **KULLANIM & DURUM — EL KİTABI:** [docs/EL_KITABI.md](docs/EL_KITABI.md) ← *buradan başla*
 - **Tek doğruluk kaynağı (mimari):** [docs/GOKDOGAN_YAZILIM_MIMARISI.md](docs/GOKDOGAN_YAZILIM_MIMARISI.md) (SAD)
-- **İnşa talimatı:** [docs/GOKDOGAN_CLAUDE_CODE_PROMPT.md](docs/GOKDOGAN_CLAUDE_CODE_PROMPT.md)
+- **İnşa talimatı:** (dökümanlar repo dışında tutuluyor)
 - **Plan:** [docs/GOKDOGAN_KESIN_PLAN_v4.md](docs/GOKDOGAN_KESIN_PLAN_v4.md)
 - **İlerleme defteri:** [PROGRESS.md](PROGRESS.md)
 
