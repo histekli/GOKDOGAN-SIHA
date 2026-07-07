@@ -1,0 +1,16 @@
+id: "02"
+name: "Waypoint Rota Takibi"
+kind: waypoint
+description: >
+  Çok bacaklı waypoint görevi; rüzgâr altında çapraz-hata (cross-track) sınırda.
+live_target: run-sitl-stack
+world:
+  waypoints_ne: [[0, 0], [250, 0], [250, 250], [0, 250]]
+  wind_mps: 3.0
+params:
+  track_gain: 0.9
+  speed_mps: 10.0
+acceptance:
+  max_cross_track_m: {lt: 5.0}      # KTR: çapraz-hata < 5 m
+  waypoints: {gte: 3}
+  final_state: {eq: "CRUISE"}

@@ -10,6 +10,15 @@ mission_fsm:
     publish_rate_hz: 1.0
     control_rate_hz: 2.0
     autostart: true                # SITL/CI: lifecycle configure→activate otomatik
+    # Failsafe katman-2 (SAD §18). Katman-1 = ArduPilot native FS (FS_THR/FS_GCS/BATT — ⚠️ param).
+    failsafe_enabled: true
+    fs_rc_loss_s: 5.0              # RC linki kaybı → LAND (ArduPilot FS_THR ile eşli)
+    fs_gcs_loss_s: 10.0           # RF/GCS telemetri kaybı → RTL (KTR)
+    fs_gps_glitch_s: 2.0          # GPS/EKF bozulması → LAND (dead-reckoning)
+    fs_batt_rtl_pct: 20.0        # batarya < %20 → RTL
+    fs_rate_hz: 5.0
+    watchdog_timeout_s: 3.0
+    critical_nodes: ["aircraft_state"]
 
 aircraft_state:
   ros__parameters:
@@ -59,6 +68,18 @@ mission_link:
     heartbeat_hz: 1.0
     heartbeat_timeout_s: 5.0
     schema_path: ""     # doldurulursa gelen mesajlar JSON Schema ile doğrulanır
+
+video_streamer:
+  ros__parameters:
+    mode: "dev"                 # SITL/CI: kamerasız → videotestsrc
+    source: "videotestsrc"
+    width: 1280
+    height: 720
+    fps: 30
+    bitrate_kbps: 2000
+    rtsp_host: "0.0.0.0"
+    rtsp_port: 8554
+    rtsp_mount: "/gokdogan"
 
 mavros:
   ros__parameters:

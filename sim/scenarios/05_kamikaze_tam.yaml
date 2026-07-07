@@ -1,0 +1,19 @@
+id: "05"
+name: "Kamikaze Tam Görev"
+kind: kamikaze
+description: >
+  Intikal → Dalış (−45°) → QR okuma → Pull-up. GERÇEK kamikaze FSM çekirdeği koşulur.
+  KTR: G ≤ 3, QR okundu, sonuç paketi ≤ 2 s. (Sabit-kanat dalışı SITL/plane → sim fazı.)
+live_target: null                 # plane dalışı ⚠️ ON-DEVICE/sim fazı; FSM çekirdeği analitik
+world:
+  start_alt_m: 120.0
+  qr_available: true
+  qr_text: "GOKDOGAN-42"
+params:
+  airspeed_mps: 29.0
+  result_latency_s: 1.2
+acceptance:
+  max_g: {lte: 3.0}                # G ≤ 3 (clamp guard)
+  qr_success: {eq: true}
+  min_alt_m: {gte: 25.0}           # min-alt güvenlik (30m eşiği ± dinamik)
+  result_latency_s: {lte: 2.0}     # KTR: sonuç paketi ≤ 2 s

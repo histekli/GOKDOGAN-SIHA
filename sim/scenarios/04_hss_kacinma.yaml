@@ -1,0 +1,24 @@
+id: "04"
+name: "HSS Kaçınma"
+kind: hss
+description: >
+  Hedefe giderken yasak bölgeyi (HSS) ihlal etmeden dolaş. GERÇEK APF çekirdeği koşulur.
+  KTR: %100 kaçınma, 0 ihlal saniyesi.
+live_target: run-hss-demo         # canlı SITL fidelity (Kabul Kapısı 5)
+world:
+  start_ne: [0.0, 0.0]
+  goal_ne: [0.0, 300.0]
+  hss_ne_r:
+    - [0.0, 150.0, 40.0]          # tam yolun ortasında
+    - [30.0, 210.0, 25.0]
+params:
+  k_att: 0.8
+  k_rep: 12.0
+  hss_margin_m: 25.0
+  v_max: 12.0
+  dt: 0.1
+  tmax_s: 200.0
+acceptance:
+  min_clearance_m: {gt: 0.0}       # KTR: 0 ihlal (kenar-uzaklığı hep pozitif)
+  violation_seconds: {eq: 0.0}
+  reached_goal: {eq: true}

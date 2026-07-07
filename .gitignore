@@ -30,8 +30,31 @@ venv/
 .DS_Store
 
 # Build / models / logs (host volumes)
-models/
+# NOT: sadece kök /models (TensorRT engine deposu) — sim/gazebo/models DEĞİL!
+/models/
 *.plan
 *.engine
 *.onnx
 scratch/
+
+# Gazebo — üçüncü parti klon (kurulum: git clone https://github.com/khancyr/ardupilot_gazebo
+#   sonra `make gazebo-plugin`) ve Fuel'den indirilen büyük dünya (Baylands, 393MB)
+sim/gazebo/ardupilot_gazebo/
+sim/gazebo/models/baylands/
+_gzsitl_logs/
+_gzsitl_result.txt
+docs/best.onnx
+
+# SITL/Gazebo koşu artıkları (script logları + ArduPilot crash dökümleri)
+_hl_*.log
+_gs_*.log
+dumpcore.sh_*
+dumpstack.sh_*
+eeprom.bin
+
+# Exclude large or sensitive folders per upload request
+docs/
+TEKNOFEST-GOKDOGAN/
+
+# Local AI tooling artifacts
+.claude/

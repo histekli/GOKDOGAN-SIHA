@@ -1,0 +1,16 @@
+id: "07"
+name: "Haberleşme Kaybı Failsafe"
+kind: comms_loss
+description: >
+  RF/GCS telemetri kaybı → failsafe. SAD §18: 10 s içinde kayıp → RTL (KTR).
+  (mission_link/Wi-Fi kaybı uçuşu DURDURMAZ; bu senaryo RF/GCS telemetri kaybıdır.)
+live_target: null                 # ArduPilot native FS_GCS → Faz 8 canlı tetik testi
+world:
+  loss_duration_s: 15.0
+params:
+  gcs_fs_threshold_s: 10.0
+  reaction_margin_s: 0.5
+acceptance:
+  failsafe_triggered: {eq: true}
+  reaction_time_s: {lte: 11.0}     # 10 s + küçük pay
+  final_state: {in: ["RTL", "LAND"]}

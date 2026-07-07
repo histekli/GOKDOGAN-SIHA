@@ -4,6 +4,7 @@ Diller-arası TEK sınır. UDP 5005 (aircraft_vision↑, latest-wins) + TCP 5006
 Onboard = TCP SUNUCU (GCS bağlanır); UDP hedefi TCP peer IP'sinden öğrenilir.
 TCP kopması → onboard OTONOM DEVAM (İ2); yeniden accept. Bozuk/partial frame → drop+log.
 """
+
 import socket
 import threading
 
@@ -11,12 +12,22 @@ import rclpy
 from rclpy.node import Node
 from rclpy.callback_groups import ReentrantCallbackGroup
 
+from std_msgs.msg import String
+
 from gokdogan_msgs.msg import (
-    MissionMode, MissionCommand, LockEvent, BBox,
-    AircraftState, Opponents, Opponent, HssList, Hss,
+    MissionMode,
+    MissionCommand,
+    LockEvent,
+    BBox,
+    AircraftState,
+    Opponents,
+    Opponent,
+    HssList,
+    Hss,
 )
 from gokdogan_common import qos
 from gokdogan_mission_link import protocol as P
+from gokdogan_mission_link.metrics import LinkStats
 
 _CMD_MAP = {
     "START_LOCK": MissionCommand.START_LOCK,
@@ -37,8 +48,7 @@ class MissionLinkNode(Node):
         self.declare_parameter("heartbeat_timeout_s", 5.0)
         self.declare_parameter("schema_path", "")
 
-        self._validator = P.SchemaValidator(
-            self.get_parameter("schema_path").value or None)
+        self._validator = P.SchemaValidator(self.get_parameter("schema_path").value or None)
 
         # Durum önbelleği (latest-wins)
         self._mode = MissionMode()
@@ -57,22 +67,22 @@ class MissionLinkNode(Node):
 
         cbg = ReentrantCallbackGroup()
         # Yukarı (onboard→GCS) için abonelikler
-        self.create_subscription(MissionMode, "/mission/mode", self._on_mode,
-                                 qos.mission_mode(), callback_group=cbg)
-        self.create_subscription(BBox, "/perception/selected_bbox", self._on_bbox,
-                                 qos.sensor_stream(), callback_group=cbg)
-        self.create_subscription(LockEvent, "/lock/event", self._on_lock,
-                                 qos.lock_event(), callback_group=cbg)
-        self.create_subscription(AircraftState, "/aircraft/state", lambda m: None,
-                                 qos.sensor_stream(), callback_group=cbg)
+        self.create_subscription(MissionMode, "/mission/mode", self._on_mode, qos.mission_mode(), callback_group=cbg)
+        self.create_subscription(
+            BBox, "/perception/selected_bbox", self._on_bbox, qos.sensor_stream(), callback_group=cbg
+        )
+        self.create_subscription(LockEvent, "/lock/event", self._on_lock, qos.lock_event(), callback_group=cbg)
+        self.create_subscription(
+            AircraftState, "/aircraft/state", lambda m: None, qos.sensor_stream(), callback_group=cbg
+        )
 
         # Aşağı (GCS→onboard) için yayıncılar
-        self._pub_cmd = self.create_publisher(
-            MissionCommand, "/mission/command", qos.mission_command())
-        self._pub_opp = self.create_publisher(
-            Opponents, "/server/opponents", qos.server_data())
-        self._pub_hss = self.create_publisher(
-            HssList, "/server/hss", qos.server_data())
+        self._pub_cmd = self.create_publisher(MissionCommand, "/mission/command", qos.mission_command())
+        self._pub_opp = self.create_publisher(Opponents, "/server/opponents", qos.server_data())
+        self._pub_hss = self.create_publisher(HssList, "/server/hss", qos.server_data())
+        # Link kalite metrikleri (SAD §22): gelen (down) seq-kayıp % + tek-yön gecikme
+        self._stats = LinkStats()
+        self._pub_health = self.create_publisher(String, "/health/mission_link", 10)
 
         # UDP soket (aircraft_vision gönderimi)
         self._udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -82,13 +92,15 @@ class MissionLinkNode(Node):
         hdt = 1.0 / float(self.get_parameter("heartbeat_hz").value)
         self.create_timer(vdt, self._send_vision, callback_group=cbg)
         self.create_timer(hdt, self._heartbeat_tick, callback_group=cbg)
+        self.create_timer(1.0, self._publish_link_health, callback_group=cbg)
 
         # TCP sunucu thread'i
         self._tcp_thread = threading.Thread(target=self._tcp_server_loop, daemon=True)
         self._tcp_thread.start()
         self.get_logger().info(
             f"mission_link: TCP :{self.get_parameter('tcp_port').value} sunucu, "
-            f"UDP →:{self.get_parameter('udp_port').value}")
+            f"UDP →:{self.get_parameter('udp_port').value}"
+        )
 
     # ---- ROS abonelik önbellekleri ----
     def _on_mode(self, msg):
@@ -101,12 +113,17 @@ class MissionLinkNode(Node):
         self._lock = msg
         # Geçerli kilit olayı → TCP lock_valid (kritik, güvenilir)
         if msg.valid:
-            self._send_tcp(P.build(
-                "lock_valid", self._next_tcp(),
-                valid=True, target_id=int(msg.target_id),
-                center=[float(msg.center[0]), float(msg.center[1])],
-                box={"x": msg.box.x, "y": msg.box.y, "w": msg.box.w, "h": msg.box.h},
-                lock_end_ts=P.now_ts()))
+            self._send_tcp(
+                P.build(
+                    "lock_valid",
+                    self._next_tcp(),
+                    valid=True,
+                    target_id=int(msg.target_id),
+                    center=[float(msg.center[0]), float(msg.center[1])],
+                    box={"x": msg.box.x, "y": msg.box.y, "w": msg.box.w, "h": msg.box.h},
+                    lock_end_ts=P.now_ts(),
+                )
+            )
 
     # ---- seq sayaçları ----
     def _next_udp(self):
@@ -124,7 +141,8 @@ class MissionLinkNode(Node):
         bb = self._bbox
         lk = self._lock
         msg = P.build(
-            "aircraft_vision", self._next_udp(),
+            "aircraft_vision",
+            self._next_udp(),
             target_center_x=(bb.x + bb.w / 2.0) if bb else None,
             target_center_y=(bb.y + bb.h / 2.0) if bb else None,
             target_width=(bb.w if bb else None),
@@ -137,8 +155,7 @@ class MissionLinkNode(Node):
             active_service=int(self._mode.active_service),
         )
         try:
-            self._udp.sendto(P.encode(msg),
-                             (self._gcs_ip, int(self.get_parameter("udp_port").value)))
+            self._udp.sendto(P.encode(msg), (self._gcs_ip, int(self.get_parameter("udp_port").value)))
         except OSError as e:
             self.get_logger().warn(f"UDP gönderim hatası: {e}")
 
@@ -150,8 +167,7 @@ class MissionLinkNode(Node):
             timeout = float(self.get_parameter("heartbeat_timeout_s").value)
             if self._link_up and (P.now_ts() - self._last_gcs_hb) > timeout:
                 self._link_up = False
-                self.get_logger().warn(
-                    "mission_link heartbeat timeout → LINK-LOST (onboard otonom devam)")
+                self.get_logger().warn("mission_link heartbeat timeout → LINK-LOST (onboard otonom devam)")
 
     # ---- TCP sunucu ----
     def _tcp_server_loop(self):
@@ -206,7 +222,10 @@ class MissionLinkNode(Node):
         if not ok:
             self.get_logger().warn(f"şema-dışı mesaj reddedildi ({msg.get('type')}): {err}")
             return
+        # link kalite metriği: TÜM down-link mesajları tek monotonik seq paylaşır (heartbeat dahil)
         t = msg.get("type")
+        if isinstance(msg.get("seq"), int):
+            self._stats.observe(msg["seq"], ts=msg.get("ts"), now=P.now_ts())
         if t == "heartbeat":
             self._last_gcs_hb = P.now_ts()
         elif t == "operator_cmd":
@@ -216,6 +235,16 @@ class MissionLinkNode(Node):
         elif t == "config":
             self.get_logger().info(f"config alındı: {msg.get('autonomy_weights')}")
         # bilinmeyen tür TcpFramer'da zaten elenir
+
+    def _publish_link_health(self):
+        """SAD §22: link kalite metriği (seq-kayıp %, gecikme) → GCS Sistem Sağlığı."""
+        import json
+
+        snap = self._stats.snapshot()
+        snap["link_up"] = self._link_up
+        m = String()
+        m.data = json.dumps(snap)
+        self._pub_health.publish(m)
 
     def _publish_operator_cmd(self, msg):
         cmd = msg.get("cmd")
@@ -227,6 +256,7 @@ class MissionLinkNode(Node):
         out.target_id = int(msg.get("target_id") or -1)
         out.mode = str(msg.get("mode") or "")
         import json
+
         out.params_json = json.dumps(msg.get("params") or {})
         self._pub_cmd.publish(out)
         self.get_logger().info(f"operator_cmd → /mission/command: {cmd}")
@@ -285,6 +315,7 @@ class MissionLinkNode(Node):
 def main(args=None):
     rclpy.init(args=args)
     from rclpy.executors import MultiThreadedExecutor
+
     node = MissionLinkNode()
     ex = MultiThreadedExecutor()
     ex.add_node(node)

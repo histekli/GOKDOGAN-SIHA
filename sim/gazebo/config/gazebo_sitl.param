@@ -1,0 +1,4 @@
+# GAZEBO SIM-ONLY: classic gazebo IMU'su "PreArm: Accels inconsistent" artefaktı üretir
+# (çift-IMU tutarlılık kontrolü, dış-FDM + ODE titreşimi). Yalnız simde bypass.
+# GERÇEK ARAÇTA ASLA KULLANILMAZ (hardware.yaml/param'da ARMING_CHECK tam açık).
+ARMING_CHECK 0

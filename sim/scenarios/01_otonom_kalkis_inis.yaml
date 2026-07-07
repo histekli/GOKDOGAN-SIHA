@@ -1,0 +1,19 @@
+id: "01"
+name: "Otonom Kalkış-İniş"
+kind: takeoff_land
+description: >
+  Otonom kalkış → seyir → otonom iniş. KTR: otonom iniş, yatay/iniş hızı güvenli sınırda.
+live_target: run-sitl-stack       # canlı SITL fidelity (Kabul Kapısı 1)
+world:
+  takeoff_alt_m: 40.0
+  wind_mps: 3.0
+params:
+  cruise_speed_mps: 8.0
+  climb_rate_mps: 2.5
+  descent_rate_mps: 1.5
+  cruise_time_s: 20.0
+acceptance:
+  max_ground_speed_mps: {lte: 12.0}     # KTR: hız < 12 m/s
+  landing_vertical_speed_mps: {lte: 2.5}
+  final_state: {eq: "IDLE"}
+  reached_cruise: {eq: true}

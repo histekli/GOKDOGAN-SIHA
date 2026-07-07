@@ -28,6 +28,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       libtool libxml2-dev libxslt1-dev zlib1g-dev \
       libzbar0 net-tools iproute2 gnupg lsb-release ca-certificates \
       python3-colcon-common-extensions python3-vcstool \
+      python3-gi gir1.2-gstreamer-1.0 gir1.2-gst-rtsp-server-1.0 \
+      gstreamer1.0-tools gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+      gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav \
+      gstreamer1.0-rtsp \
       ros-humble-mavros ros-humble-mavros-extras ros-humble-mavros-msgs \
       ros-humble-rmw-cyclonedds-cpp \
     && rm -rf /var/lib/apt/lists/*
@@ -79,6 +83,30 @@ RUN python3 -m pip install "pytest==7.4.4" jsonschema \
 # qrcode: sentetik QR üretimi (kamikaze QR pipeline testi)
 # numpy/scipy uyumlu pin: pip numpy 2.x, apt scipy'nin numpy.Inf'ını kırıyordu;
 # 1.24.4/1.10.1 ROS2 Humble + onnxruntime + opencv ile uyumlu.
+
+# ---------------------------------------------------------------------------
+# 3.6) Gazebo Classic 11 + ROS2 köprüsü (kamera-in-the-loop, Faz sim)
+#   ArduPilot katmanından SONRA → pahalı ArduPilot build cache'i korunur.
+#   ros-humble-gazebo-ros-pkgs = Classic Gazebo (gazebo11) + gazebo_ros + gazebo_plugins
+#   (gazebo_ros_camera → sensor_msgs/Image). gz DEĞİL (KTR §8.3 Classic 11).
+#   HEADLESS render: xvfb (sanal ekran) + llvmpipe (yazılım GL) → GPU ZORUNLU DEĞİL.
+# ---------------------------------------------------------------------------
+RUN curl -sSL https://packages.osrfoundation.org/gazebo.gpg \
+      -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg && \
+    echo "deb [arch=amd64 signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] \
+http://packages.osrfoundation.org/gazebo/ubuntu-stable jammy main" \
+      > /etc/apt/sources.list.d/gazebo-stable.list && \
+    apt-get update && apt-get install -y --no-install-recommends \
+      ros-humble-gazebo-ros-pkgs \
+      xvfb x11-utils \
+      libgl1-mesa-dri libgl1-mesa-glx mesa-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Headless yazılım render (GPU yoksa): llvmpipe + offscreen Qt
+ENV LIBGL_ALWAYS_SOFTWARE=1 \
+    GALLIUM_DRIVER=llvmpipe \
+    QT_QPA_PLATFORM=offscreen \
+    GAZEBO_MODEL_PATH=/workspace/sim/gazebo/models:/usr/share/gazebo-11/models
 
 # ---------------------------------------------------------------------------
 # 4) colcon workspace mount noktası + entrypoint (ROS + ArduPilot ortamı)

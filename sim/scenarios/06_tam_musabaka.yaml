@@ -1,0 +1,21 @@
+id: "06"
+name: "Tam Müsabaka"
+kind: full_match
+description: >
+  Uçtan uca müsabaka: otonom uçuş + çoklu kilit + kamikaze + telemetri, HSS ihlali yok.
+  KTR: hedef toplam puan > 800 (kilit 500 + kamikaze 300 havuzlarından pay).
+live_target: run-full-loop-demo
+world:
+  locks: 3
+  kamikazes: 1
+  autonomous_flight_ok: true
+  telemetry_ok: true
+  hss_violation_seconds: 0
+params:
+  points_per_lock: 250
+  points_per_kamikaze: 300
+  penalty_per_violation_s: 20
+acceptance:
+  total_score: {gt: 800}           # > 800 hedef metrik
+  hss_violation_seconds: {eq: 0}
+  final_state: {eq: "CRUISE"}

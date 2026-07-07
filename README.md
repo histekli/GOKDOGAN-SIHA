@@ -2,10 +2,24 @@
 
 TEKNOFEST Savaşan İHA 2026 (Takım ID 759667) onboard otonomi + GCS entegrasyon yazılımı.
 
-- **Tek doğruluk kaynağı (mimari):** [docs/GOKDOGAN_YAZILIM_MIMARISI.md](docs/GOKDOGAN_YAZILIM_MIMARISI.md) (SAD v1.0)
+> **Durum:** Planlı tüm fazlar (−1 … 9) tamamlandı · ~256 test yeşil · x86 SITL'de uçtan uca çalışıyor.
+> Kalanlar donanım/model/WPF-arayüz/uçuş (⚠️ ON-DEVICE) — bkz. [EL KİTABI §3](docs/EL_KITABI.md).
+
+- 📘 **KULLANIM & DURUM — EL KİTABI:** [docs/EL_KITABI.md](docs/EL_KITABI.md) ← *buradan başla*
+- **Tek doğruluk kaynağı (mimari):** [docs/GOKDOGAN_YAZILIM_MIMARISI.md](docs/GOKDOGAN_YAZILIM_MIMARISI.md) (SAD)
 - **İnşa talimatı:** [docs/GOKDOGAN_CLAUDE_CODE_PROMPT.md](docs/GOKDOGAN_CLAUDE_CODE_PROMPT.md)
 - **Plan:** [docs/GOKDOGAN_KESIN_PLAN_v4.md](docs/GOKDOGAN_KESIN_PLAN_v4.md)
 - **İlerleme defteri:** [PROGRESS.md](PROGRESS.md)
+
+## Hızlı başlangıç
+
+```bash
+make build && make verify-sitl     # kur + doğrula (tek seferlik)
+make test                          # tüm testler (colcon + şema + tools + sim)
+make run-full-loop-demo            # mock_server + SITL + onboard + GCS → tam görev döngüsü
+make help                          # tüm komutlar
+```
+Fazların demo komutları ve "nasıl kullanılır" için → [EL KİTABI §5-6](docs/EL_KITABI.md).
 
 ## Mimari özet
 
@@ -18,12 +32,16 @@ TEKNOFEST Savaşan İHA 2026 (Takım ID 759667) onboard otonomi + GCS entegrasyo
 ## Repo yapısı
 
 ```
-docker/            Dev (x86 SITL) + üretim (Jetson) imajları, compose
-gokdogan-onboard/  colcon workspace (ROS2 paketleri) — src/ Faz 0'da doldurulur
-sim/               SITL / Gazebo / scenario_runner / mock_server (Faz 6-7)
-contracts/         mission_link MessagePack şeması (Faz 0'da dondurulur)
-scripts/           dev/CI yardımcı betikleri
-docs/              SAD + plan + bu prompt
+docker/            Dev (x86 SITL) + üretim (Jetson ⚠️) imajları, compose
+gokdogan-onboard/  colcon workspace — 14 ROS2 paketi (msgs/common/guidance/perception/
+                   tracking/lock_validator/target_selector/kamikaze/hss/mission_fsm/
+                   mission_link/mavlink_iface/video_streamer/bringup)
+contracts/         mission_link MessagePack şeması (DONDU) + JSON Schema testleri
+tools/             mock_server.py · mock_gcs.py · synthetic_qr.py
+sim/               scenario_runner.py + scenarios/*.yaml (8 KTR senaryosu)
+scripts/           run_*_demo.sh (Kabul Kapısı demoları) + probe/verify/smoke
+TEKNOFEST-GOKDOGAN/ WPF GCS reposu (C#/.NET 10) — mission_link C# dikişi (Faz 9)
+docs/              EL_KITABI + SAD + KESIN_PLAN + PROMPT
 ```
 
 ## Geliştirme ortamı (Faz -1)

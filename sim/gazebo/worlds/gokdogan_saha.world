@@ -1,0 +1,117 @@
+<?xml version="1.0" ?>
+<!-- GÖKDOĞAN BİRLEŞİK SAHA — gerçekçi yarışma simülasyonu (Adım 4 final):
+       • Baylands arazisi (Fuel: OpenRobotics/baylands → sim/gazebo/models/baylands)
+       • gokdogan_talon: kameralı sabit-kanat uçağımız (ArduPlane SITL kenetli, elle fırlatma, burun +x)
+       • opponent_1: uçan kırmızı rakip (YOLO hedefi; ileride ArduPilot SITL rakip -I1)
+       • qr_ground_target: zeminde 2x2 m QR + 45° engeller (kamikaze hedefi)
+     ÇALIŞTIR: GZ_HW=1 make run-saha   (kamera: make shell → rqt_image_view /gokdogan_camera/image_raw)
+     NOT: model://baylands indirilmemişse bu dünya YÜKLENMEZ → önce Fuel'den indir (EL_KITABI). -->
+<sdf version="1.6">
+  <world name="gokdogan_saha">
+
+    <!-- GPS orijini — ArduPlane home/navigasyon (Baylands, PX4 ile aynı) -->
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>37.413534</latitude_deg>
+      <longitude_deg>-121.996561</longitude_deg>
+      <elevation>1.3</elevation>
+    </spherical_coordinates>
+
+    <scene>
+      <sky><clouds><speed>12</speed></clouds></sky>
+      <ambient>0.95 0.95 0.95 1</ambient>
+      <background>0.3 0.3 0.3 1</background>
+      <shadows>false</shadows><!-- performans: gölge kapalı (Baylands zaten ağır) -->
+    </scene>
+
+    <include><uri>model://sun</uri></include>
+
+    <!-- Baylands arazisi (150MB mesh — GPU'da akıcı; llvmpipe'ta yavaş ama çalışır) -->
+    <include><uri>model://baylands</uri></include>
+
+    <!-- Fizik: SwiftGust zephyr demo BİREBİR (kanıtlanmış uçuş ayarı — plane world ile aynı) -->
+    <physics type="ode">
+      <ode>
+        <solver><type>quick</type><iters>100</iters><sor>1.0</sor></solver>
+        <constraints>
+          <cfm>0.0</cfm><erp>0.2</erp>
+          <contact_max_correcting_vel>0.1</contact_max_correcting_vel>
+          <contact_surface_layer>0.0</contact_surface_layer>
+        </constraints>
+      </ode>
+      <real_time_update_rate>400</real_time_update_rate>
+      <max_step_size>0.0025</max_step_size>
+    </physics>
+
+    <!-- Kalkış pisti: düşük sürtünmeli (mu=1) ince şerit, +x boyunca (Talon burnu +x) —
+         Baylands çimeninde karınla hızlanma güvenilir olmayabilir; uçak bu pedin üstünde spawn olur -->
+    <model name="takeoff_pad">
+      <static>true</static>
+      <pose>25 0 0.05 0 0 0</pose>
+      <link name="link">
+        <collision name="collision">
+          <geometry><box><size>80 24 0.1</size></box></geometry>
+          <surface><friction><ode><mu>1</mu><mu2>1</mu2></ode></friction></surface>
+        </collision>
+        <visual name="pad">
+          <cast_shadows>false</cast_shadows>
+          <geometry><box><size>80 24 0.1</size></box></geometry>
+          <material><ambient>0.25 0.25 0.25 1</ambient><diffuse>0.3 0.3 0.3 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- ================== BİZİM UÇAK: Talon (kameralı, ArduPlane kenetli) ================== -->
+    <!-- DİKKAT (handoff): Baylands arazi meshi orijinde (0,0) uçağı İÇİNE GÖMÜYOR olabilir
+         (headless ölçülemedi; izole testte düz zeminde toss 8.7m, Baylands'te 0.3m = gömülme).
+         Geçici: pad üstünde bırak. GPU'da uçak arazinin içinde doğuyorsa spawn (x,y) düz bir
+         çim alana taşınmalı VEYA pad yükseltilmeli — kesin yer seçimi SİM PROMPT'unda görev. -->
+    <include>
+      <uri>model://gokdogan_talon</uri>
+      <pose>0 0 0.45 0 0 0</pose>
+    </include>
+
+    <!-- ================== RAKİP (uçan kırmızı plane; YOLO hedefi) ================== -->
+    <!-- Talon +x'e fırlatılır → rakip +x tarafında, 40m irtifada dikdörtgen tur atar -->
+    <actor name="opponent_1">
+      <link name="body">
+        <visual name="govde">
+          <geometry><box><size>2.2 0.35 0.35</size></box></geometry>
+          <material><ambient>0.85 0.05 0.05 1</ambient><diffuse>0.9 0.08 0.08 1</diffuse></material>
+        </visual>
+        <visual name="kanat">
+          <pose>-0.25 0 0 0 0 0</pose>
+          <geometry><box><size>0.55 3.2 0.06</size></box></geometry>
+          <material><ambient>0.85 0.05 0.05 1</ambient><diffuse>0.9 0.08 0.08 1</diffuse></material>
+        </visual>
+        <visual name="kuyruk">
+          <pose>0.95 0 0.16 0 0 0</pose>
+          <geometry><box><size>0.3 1.1 0.05</size></box></geometry>
+          <material><ambient>0.85 0.05 0.05 1</ambient><diffuse>0.9 0.08 0.08 1</diffuse></material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <trajectory id="0" type="fly">
+          <waypoint><time>0</time>   <pose>70 -60 40 0 0 1.5708</pose></waypoint>
+          <waypoint><time>10</time>  <pose>70 60 40 0 0 1.5708</pose></waypoint>
+          <waypoint><time>10.2</time><pose>70 60 40 0 0 3.14159</pose></waypoint>
+          <waypoint><time>16</time>  <pose>130 60 42 0 0 3.14159</pose></waypoint>
+          <waypoint><time>16.2</time><pose>130 60 42 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>26</time>  <pose>130 -60 42 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>26.2</time><pose>130 -60 42 0 0 0</pose></waypoint>
+          <waypoint><time>32</time>  <pose>70 -60 40 0 0 0</pose></waypoint>
+          <waypoint><time>32.2</time><pose>70 -60 40 0 0 1.5708</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- ================== KAMİKAZE HEDEFİ: zeminde 2x2 m QR + 45° engeller ============== -->
+    <include>
+      <uri>model://qr_ground_target</uri>
+      <pose>80 20 0.2 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>

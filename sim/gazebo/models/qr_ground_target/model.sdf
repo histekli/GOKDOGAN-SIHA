@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<!-- KTR kamikaze hedefi: ZEMİNDE 2x2 m QR ("teknofest2025", yukarı bakar) + 4 yanında 45° eğik
+     engel (huni gibi — dalışla yukarıdan okunur). QR dokusu model://qr_plate'ten tekrar kullanılır.
+     Engel açıları GUI'de ince ayar yapılabilir. -->
+<sdf version="1.6">
+  <model name="qr_ground_target">
+    <static>true</static>
+    <link name="target">
+
+      <!-- QR plakası: zeminde düz, üst yüzü yukarı bakar -->
+      <visual name="qr_face">
+        <pose>0 0 0.03 0 0 0</pose>
+        <geometry><box><size>2.0 2.0 0.05</size></box></geometry>
+        <material>
+          <script>
+            <uri>model://qr_plate/materials/scripts</uri>
+            <uri>model://qr_plate/materials/textures</uri>
+            <name>QrPlate/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="qr_c">
+        <pose>0 0 0.03 0 0 0</pose>
+        <geometry><box><size>2.0 2.0 0.05</size></box></geometry>
+      </collision>
+
+      <!-- 4 engel: her biri 45° dışa doğru eğik, QR'ın kenarında (huni ağzı yukarı) -->
+      <visual name="wall_yp">
+        <pose>0 1.7 0.7 -0.785 0 0</pose>
+        <geometry><box><size>2.8 0.1 2.0</size></box></geometry>
+        <material><ambient>0.55 0.55 0.55 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="wall_yn">
+        <pose>0 -1.7 0.7 0.785 0 0</pose>
+        <geometry><box><size>2.8 0.1 2.0</size></box></geometry>
+        <material><ambient>0.55 0.55 0.55 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="wall_xp">
+        <pose>1.7 0 0.7 0 0.785 0</pose>
+        <geometry><box><size>0.1 2.8 2.0</size></box></geometry>
+        <material><ambient>0.55 0.55 0.55 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+      <visual name="wall_xn">
+        <pose>-1.7 0 0.7 0 -0.785 0</pose>
+        <geometry><box><size>0.1 2.8 2.0</size></box></geometry>
+        <material><ambient>0.55 0.55 0.55 1</ambient><diffuse>0.6 0.6 0.6 1</diffuse></material>
+      </visual>
+
+    </link>
+  </model>
+</sdf>

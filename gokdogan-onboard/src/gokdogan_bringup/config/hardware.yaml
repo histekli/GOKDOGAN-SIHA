@@ -11,10 +11,34 @@ mission_fsm:
     publish_rate_hz: 1.0
     control_rate_hz: 2.0
     autostart: false               # Gerçekte lifecycle yöneticisi/operatör aktive eder
+    # Failsafe katman-2 (SAD §18). Katman-1 ArduPilot native FS parametreleri ⚠️ ON-DEVICE:
+    #   FS_THR_ENABLE(RC 5s→RTL/LAND) · FS_GCS_ENABL(10s→RTL) · BATT_LOW_VOLT/BATT_FS_LOW_ACT(→RTL)
+    #   · FENCE_ENABLE/FENCE_ACTION(→RTL) · EK3_* GPS/EKF. Saha ekibi Mission Planner ile ayarlar.
+    failsafe_enabled: true
+    fs_rc_loss_s: 5.0
+    fs_gcs_loss_s: 10.0
+    fs_gps_glitch_s: 2.0
+    fs_batt_rtl_pct: 20.0
+    fs_rate_hz: 5.0
+    watchdog_timeout_s: 3.0
+    critical_nodes: ["aircraft_state", "guidance", "perception"]
 
 aircraft_state:
   ros__parameters:
     publish_rate_hz: 20.0
+
+video_streamer:
+  ros__parameters:
+    mode: "hardware"            # Jetson NVENC (nvv4l2h264enc)
+    source: "v4l2"             # AR0234 USB3 (⚠️ ON-DEVICE)
+    device: "/dev/video0"
+    width: 1920
+    height: 1200
+    fps: 30
+    bitrate_kbps: 6000
+    rtsp_host: "0.0.0.0"
+    rtsp_port: 8554
+    rtsp_mount: "/gokdogan"
 
 mavros:
   ros__parameters:

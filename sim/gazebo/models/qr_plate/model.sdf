@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!-- 2x2 m QR plakası (KTR kamikaze hedefi). QR metni: "teknofest2025".
+     Üstüne QR dokusu (materials/textures/qr.png) uygulanır → kamikaze QR-okuma testinde okunur. -->
+<sdf version="1.6">
+  <model name="qr_plate">
+    <static>true</static>
+    <link name="plate">
+      <visual name="qr_face">
+        <geometry><box><size>2.0 2.0 0.05</size></box></geometry>
+        <material>
+          <script>
+            <uri>model://qr_plate/materials/scripts</uri>
+            <uri>model://qr_plate/materials/textures</uri>
+            <name>QrPlate/Diffuse</name>
+          </script>
+        </material>
+      </visual>
+      <collision name="c">
+        <geometry><box><size>2.0 2.0 0.05</size></box></geometry>
+      </collision>
+    </link>
+  </model>
+</sdf>

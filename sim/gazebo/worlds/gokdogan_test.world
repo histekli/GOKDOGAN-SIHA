@@ -1,0 +1,110 @@
+<?xml version="1.0" ?>
+<!-- GÖKDOĞAN Gazebo Classic 11 test dünyası (Adım 1) — kamera-in-the-loop smoke.
+     Sabit kamera (gazebo_ros_camera → /camera/image) + önünde uçan KIRMIZI rakip (actor).
+     Amaç: headless render + kamera→ROS köprüsü + perception'ın (mock renk-blob) rakibi görmesi.
+     Çözünürlük llvmpipe (yazılım GL) için düşük tutuldu; GPU'da artırılabilir. -->
+<sdf version="1.6">
+  <world name="gokdogan_test">
+
+    <include><uri>model://sun</uri></include>
+    <include><uri>model://ground_plane</uri></include>
+
+    <!-- Fizik: gerçek zamanlı, headless smoke için hafif -->
+    <physics type="ode">
+      <real_time_update_rate>200</real_time_update_rate>
+      <max_step_size>0.005</max_step_size>
+    </physics>
+
+    <scene>
+      <ambient>0.6 0.6 0.6 1</ambient>
+      <background>0.5 0.7 1.0 1</background>
+      <sky/>
+    </scene>
+
+    <!-- ================= SABİT KAMERA ================= -->
+    <!-- (0,0,30)'da, +x yönüne bakar (Gazebo kamerası kendi +x'ine bakar). 82° FOV. -->
+    <model name="gokdogan_camera">
+      <static>true</static>
+      <pose>0 0 30 0 0 0</pose>
+      <link name="camera_link">
+        <visual name="body">
+          <geometry><box><size>0.3 0.3 0.3</size></box></geometry>
+          <material><ambient>0.1 0.1 0.1 1</ambient></material>
+        </visual>
+        <sensor name="camera" type="camera">
+          <always_on>1</always_on>
+          <update_rate>10</update_rate>
+          <visualize>true</visualize>
+          <camera>
+            <horizontal_fov>1.431</horizontal_fov>   <!-- 82° (AR0234) -->
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
+            <clip><near>0.1</near><far>3000</far></clip>
+          </camera>
+          <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+            <ros>
+              <namespace>/</namespace>
+              <remapping>~/image_raw:=/camera/image</remapping>
+              <remapping>~/camera_info:=/camera/camera_info</remapping>
+            </ros>
+            <camera_name>gokdogan_camera</camera_name>
+            <frame_name>camera_link</frame_name>
+          </plugin>
+        </sensor>
+      </link>
+    </model>
+
+    <!-- ================= HAREKETLİ RAKİP (actor, KIRMIZI) ================= -->
+    <!-- Kameranın ~50m önünde y ekseninde sağa-sola süzülür (fizik yok, deterministik). -->
+    <!-- PLANE-ŞEKİLLİ kırmızı rakip (gövde + kanat + yatay/dikey kuyruk). x=45m'de, kameranın
+         ~%70 merkez ROI'sinde (y=-15..15) süzülür. Fuselage x-ekseni = uçuş yönü (yaw=1.5708→+y).
+         KIRMIZI: mock renk-blob görsün (Adım 3'te YOLO şekli tanıyacak). Actor skin uyarısı normal. -->
+    <actor name="opponent_1">
+      <link name="body">
+        <visual name="fuselage">
+          <geometry><box><size>4.0 0.6 0.6</size></box></geometry>
+          <material><ambient>1 0 0 1</ambient><diffuse>1 0 0 1</diffuse><emissive>0.4 0 0 1</emissive></material>
+        </visual>
+        <visual name="wing">
+          <pose>0.2 0 0 0 0 0</pose>
+          <geometry><box><size>1.2 7.0 0.12</size></box></geometry>
+          <material><ambient>1 0.05 0.05 1</ambient><diffuse>1 0.05 0.05 1</diffuse><emissive>0.4 0 0 1</emissive></material>
+        </visual>
+        <visual name="htail">
+          <pose>-1.8 0 0.1 0 0 0</pose>
+          <geometry><box><size>0.8 2.6 0.1</size></box></geometry>
+          <material><ambient>1 0.05 0.05 1</ambient><diffuse>1 0.05 0.05 1</diffuse><emissive>0.4 0 0 1</emissive></material>
+        </visual>
+        <visual name="vtail">
+          <pose>-1.8 0 0.5 0 0 0</pose>
+          <geometry><box><size>0.7 0.1 0.9</size></box></geometry>
+          <material><ambient>1 0.05 0.05 1</ambient><diffuse>1 0.05 0.05 1</diffuse><emissive>0.4 0 0 1</emissive></material>
+        </visual>
+      </link>
+      <script>
+        <loop>true</loop>
+        <auto_start>true</auto_start>
+        <delay_start>0.0</delay_start>
+        <trajectory id="0" type="fly">
+          <waypoint><time>0</time>  <pose>45 -15 30 0 0 1.5708</pose></waypoint>
+          <waypoint><time>6</time>  <pose>45  15 30 0 0 1.5708</pose></waypoint>
+          <waypoint><time>6.1</time><pose>45  15 30 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>12</time> <pose>45 -15 30 0 0 -1.5708</pose></waypoint>
+          <waypoint><time>12.1</time><pose>45 -15 30 0 0 1.5708</pose></waypoint>
+        </trajectory>
+      </script>
+    </actor>
+
+    <!-- KTR kamikaze hedefi: ZEMİNDE 2x2 m QR + 4 yanı 45° engel (huni). Kamikaze dalışıyla
+         yukarıdan okunur (Adım 4). Yandan bakan test kamerası çerçevelemez; 3D GUI'de görünür. -->
+    <include>
+      <uri>model://qr_ground_target</uri>
+      <name>qr_ground_target</name>
+      <pose>30 0 0 0 0 0</pose>
+    </include>
+
+  </world>
+</sdf>

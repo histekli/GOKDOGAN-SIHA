@@ -36,6 +36,9 @@ if(BUILD_TESTING)
   # Python QoS golden testi
   find_package(ament_cmake_pytest REQUIRED)
   ament_add_pytest_test(test_qos_py test/test_qos.py)
+  # Faz 8: watchdog + yapısal log (saf)
+  ament_add_pytest_test(test_watchdog_py test/test_watchdog.py)
+  ament_add_pytest_test(test_structured_log_py test/test_structured_log.py)
 endif()
 
 ament_package()

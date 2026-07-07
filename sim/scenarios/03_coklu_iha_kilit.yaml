@@ -1,0 +1,21 @@
+id: "03"
+name: "Çoklu-İHA Kilitlenme"
+kind: lock
+description: >
+  Birden çok rakip; en uygun hedefe otonom kilit. KTR: geçerli kilit < 30 s.
+  (Görsel-servo kapalı-döngü Gazebo kamera gerektirir → analitik çekirdek; canlı fidelity
+  run-guidance-demo ile.)
+live_target: run-guidance-demo
+world:
+  opponents:
+    - {range_m: 700.0, closing_mps: 18.0}
+    - {range_m: 900.0, closing_mps: 12.0}
+    - {range_m: 620.0, closing_mps: 20.0}
+params:
+  detect_range_m: 500.0
+  lock_window_s: 4.0
+acceptance:
+  lock_time_s: {lt: 30.0}          # KTR: < 30 s
+  detected: {eq: true}
+  num_opponents: {gte: 2}
+  final_state: {eq: "LOCKING"}

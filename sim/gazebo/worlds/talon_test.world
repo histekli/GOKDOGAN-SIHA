@@ -1,0 +1,22 @@
+<?xml version="1.0" ?>
+<!-- gokdogan_talon hızlı test dünyası: parse + plugin bind + ArduPlane kenetleme -->
+<sdf version="1.6">
+  <world name="talon_test">
+    <physics type="ode">
+      <ode><solver><type>quick</type><iters>100</iters><sor>1.0</sor></solver>
+      <constraints><cfm>0.0</cfm><erp>0.2</erp>
+        <contact_max_correcting_vel>0.1</contact_max_correcting_vel>
+        <contact_surface_layer>0.0</contact_surface_layer></constraints></ode>
+      <real_time_update_rate>400</real_time_update_rate>
+      <max_step_size>0.0025</max_step_size>
+    </physics>
+    <include><uri>model://sun</uri></include>
+    <model name="ground_plane"><static>true</static><link name="link">
+      <collision name="c"><geometry><plane><normal>0 0 1</normal><size>5000 5000</size></plane></geometry>
+        <surface><friction><ode><mu>1</mu><mu2>1</mu2></ode></friction></surface></collision>
+      <visual name="v"><geometry><plane><normal>0 0 1</normal><size>5000 5000</size></plane></geometry>
+        <material><ambient>0.35 0.5 0.28 1</ambient></material></visual></link></model>
+    <!-- Gömülme sorunu çözüldü (kontrol yüzeyi ataletleri — model.sdf notuna bak); karın ~0.15m'de oturur -->
+    <include><uri>model://gokdogan_talon</uri><pose>0 0 0.3 0 0 0</pose></include>
+  </world>
+</sdf>

@@ -21,6 +21,8 @@ class PerceptionNode(Node):
         self.declare_parameter("roi_frac", 0.7)
         self.declare_parameter("yolo_every_n", 5)
         self.declare_parameter("model_path", "")
+        self.declare_parameter("conf", 0.35)      # YOLO güven eşiği (sim primitifi için düşür: ~0.12)
+        self.declare_parameter("iou", 0.45)       # NMS IoU eşiği
 
         source = self.get_parameter("source").value
         backend = self.get_parameter("backend").value
@@ -29,7 +31,9 @@ class PerceptionNode(Node):
 
         self._detector = make_detector(
             backend, roi_frac=float(self.get_parameter("roi_frac").value),
-            model_path=self.get_parameter("model_path").value)
+            model_path=self.get_parameter("model_path").value,
+            conf=float(self.get_parameter("conf").value),
+            iou=float(self.get_parameter("iou").value))
 
         self._pub = self.create_publisher(Detections, "/perception/detections", qos.detections())
 
@@ -56,13 +60,28 @@ class PerceptionNode(Node):
         self._process(frame)
 
     def _on_image(self, msg):
+        frame = self._to_bgr(msg)
+        if frame is not None:
+            self._process(frame)
+
+    def _to_bgr(self, msg):
+        """ROS Image → BGR ndarray. cv_bridge varsa onu kullan; yoksa manuel numpy
+        (Gazebo/dev'de cv_bridge olmayabilir → taşınabilir). rgb8/bgr8 destekli."""
         try:
             from cv_bridge import CvBridge
-            frame = CvBridge().imgmsg_to_cv2(msg, desired_encoding="bgr8")
+            return CvBridge().imgmsg_to_cv2(msg, desired_encoding="bgr8")
+        except Exception:  # noqa: BLE001 — cv_bridge yok → manuel yola düş
+            pass
+        try:
+            import numpy as np
+            img = np.frombuffer(bytes(msg.data), dtype=np.uint8).reshape(
+                msg.height, msg.width, 3)
+            if (msg.encoding or "rgb8").lower() == "rgb8":
+                img = img[:, :, ::-1]           # RGB→BGR
+            return np.ascontiguousarray(img)
         except Exception as e:  # noqa: BLE001
             self.get_logger().warn(f"görüntü dönüştürme hatası: {e}")
-            return
-        self._process(frame)
+            return None
 
     def _process(self, frame):
         self._i += 1

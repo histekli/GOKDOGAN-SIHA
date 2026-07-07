@@ -76,6 +76,11 @@ def _setup(context, *args, **kwargs):
             package="gokdogan_kamikaze", executable="kamikaze_node",
             name="kamikaze", output="screen", parameters=[cfg],
         ))
+    if LaunchConfiguration("enable_video").perform(context) == "true":
+        nodes.append(Node(
+            package="gokdogan_video_streamer", executable="video_streamer_node",
+            name="video_streamer", output="screen", parameters=[cfg],
+        ))
     return nodes
 
 
@@ -93,5 +98,7 @@ def generate_launch_description():
                               description="hss (APF kaçınma) node'unu başlat"),
         DeclareLaunchArgument("enable_kamikaze", default_value="true",
                               description="kamikaze action node'unu başlat"),
+        DeclareLaunchArgument("enable_video", default_value="false",
+                              description="video_streamer (RTSP) node'unu başlat"),
         OpaqueFunction(function=_setup),
     ])

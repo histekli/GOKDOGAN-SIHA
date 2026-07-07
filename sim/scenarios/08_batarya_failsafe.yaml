@@ -1,0 +1,15 @@
+id: "08"
+name: "Batarya Failsafe"
+kind: battery
+description: >
+  Batarya kritik seviyeye düşünce otomatik dönüş. SAD §18/KTR: batarya < %20 → RTL.
+live_target: null                 # ArduPilot native FS_BATT → Faz 8 canlı tetik testi
+world:
+  start_battery_pct: 100.0
+  drain_pct_per_s: 0.5
+params:
+  batt_fs_threshold_pct: 20.0
+acceptance:
+  trigger_battery_pct: {lte: 20.0} # eşikte veya altında tetikler
+  final_state: {eq: "RTL"}
+  trigger_time_s: {gt: 0.0}
